@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Login</title>
+<link rel="stylesheet" href="css/style.css">
+</head><body>
+<div class="container" style="max-width:420px; margin:80px auto; background:#fff; padding:40px; border-radius:24px; box-shadow:0 12px 40px rgba(0,0,0,0.08);">
+<h2 style="margin-bottom:24px;">Welcome Back</h2>
+<form id="loginForm">
+    <input type="email" id="loginEmail" placeholder="Email" style="width:100%; padding:14px; margin-bottom:16px; border-radius:12px; border:1px solid #e2e8f0;">
+    <input type="password" id="loginPassword" placeholder="Password" style="width:100%; padding:14px; margin-bottom:24px; border-radius:12px; border:1px solid #e2e8f0;">
+    <button type="submit" class="btn-primary" style="width:100%; justify-content:center;">Login</button>
+</form>
+<p style="margin-top:16px;"><a href="register.html">Create an account</a></p>
+</div>
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script>
+document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value;
+    const pass = document.getElementById('loginPassword').value;
+    if (loginUser(email, pass)) {
+        window.location.href = 'index.html';
+    } else {
+        alert('Invalid credentials (use any email + min 4 chars)');
+    }
+});
+</script>
+</body></html>

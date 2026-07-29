@@ -4,29 +4,23 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sports Arena · Latest Sports News</title>
-
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
-
-    <!-- Font Awesome 6 (free) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-
-    <!-- Custom Styles -->
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/article.css" />
     <link rel="stylesheet" href="css/dashboard.css" />
 </head>
 <body>
 
-    <!-- ===== PRELOADER ===== -->
+    <!-- Preloader -->
     <div id="preloader">
         <div class="loader-ring"></div>
         <span class="loader-text">Loading Arena...</span>
     </div>
 
-    <!-- ===== NAVIGATION ===== -->
+    <!-- ===== NAVIGATION (Admin‑Only) ===== -->
     <header class="navbar" id="mainNav">
         <div class="container nav-container">
             <a href="index.html" class="brand">
@@ -39,11 +33,11 @@
                     <li><a href="index.html" class="active"><i class="fas fa-home"></i> Home</a></li>
                     <li><a href="#categories" id="navCategories"><i class="fas fa-tags"></i> Categories</a></li>
                     <li><a href="#latest" id="navLatest"><i class="fas fa-newspaper"></i> Latest</a></li>
+                    <!-- Admin‑only login (no public signup) -->
                     <li id="authNav">
-                        <a href="login.html" class="btn-outline-nav"><i class="fas fa-sign-in-alt"></i> Login</a>
-                        <a href="register.html" class="btn-primary-nav"><i class="fas fa-user-plus"></i> Sign Up</a>
+                        <a href="login.html" class="btn-primary-nav"><i class="fas fa-lock"></i> Admin Login</a>
                     </li>
-                    <li id="userNav" style="display:none;">
+                    <li id="adminNav" style="display:none;">
                         <a href="dashboard.html" class="btn-primary-nav"><i class="fas fa-user-cog"></i> Dashboard</a>
                         <a href="#" id="logoutBtn" class="btn-outline-nav"><i class="fas fa-sign-out-alt"></i> Logout</a>
                     </li>
@@ -56,7 +50,7 @@
         </div>
     </header>
 
-    <!-- ===== HERO SECTION ===== -->
+    <!-- ===== HERO ===== -->
     <section class="hero" id="hero">
         <div class="hero-overlay"></div>
         <div class="container hero-content">
@@ -82,22 +76,18 @@
                 <h2><i class="fas fa-tags section-icon"></i> Explore by Category</h2>
                 <p>Dive into the sports that move the world</p>
             </div>
-            <div class="categories-grid" id="categoriesGrid">
-                <!-- Dynamically rendered -->
-            </div>
+            <div class="categories-grid" id="categoriesGrid"></div>
         </div>
     </section>
 
-    <!-- ===== LATEST ARTICLES ===== -->
+    <!-- ===== ARTICLES ===== -->
     <section class="articles-section" id="latest">
         <div class="container">
             <div class="section-header">
                 <h2><i class="fas fa-newspaper section-icon"></i> Latest Stories</h2>
                 <p>Fresh from the press — curated for you</p>
             </div>
-            <div class="articles-grid" id="articlesGrid">
-                <!-- Dynamically rendered -->
-            </div>
+            <div class="articles-grid" id="articlesGrid"></div>
             <div class="load-more-wrapper">
                 <button class="btn-outline" id="loadMoreBtn"><i class="fas fa-sync-alt"></i> Load More</button>
             </div>
@@ -147,9 +137,7 @@
                 </div>
                 <div class="footer-links">
                     <h4>Categories</h4>
-                    <ul id="footerCategories">
-                        <!-- Dynamically rendered -->
-                    </ul>
+                    <ul id="footerCategories"></ul>
                 </div>
                 <div class="footer-contact">
                     <h4>Contact</h4>
@@ -166,13 +154,9 @@
         </div>
     </footer>
 
-    <!-- ===== SCRIPTS ===== -->
-    <!-- Appwrite SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/appwrite@11.0.0/dist/umd/appwrite.min.js">
-    </script>
-    <!-- Main App -->
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@11.0.0/dist/umd/appwrite.min.js"></script>
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/app.js"></script>
 </body>
-  </html>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard · Sports Arena</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+    <!-- Admin Nav -->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="brand">
+                <i class="fas fa-trophy brand-icon"></i>
+                <span>Sports<span class="brand-highlight">Arena</span></span>
+            </a>
+            <nav class="nav-links">
+                <ul>
+                    <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="#" id="dashboardLogout" class="btn-outline-nav"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Dashboard Hero -->
+    <div class="dashboard-hero" style="background: #fff; padding: 40px 0; border-bottom: 1px solid #e9edf2;">
+        <div class="container">
+            <h1 style="font-size: 2.2rem;">🛡️ Admin Dashboard</h1>
+            <p style="color: #64748b;">Manage your sports articles – create, edit, or delete content.</p>
+        </div>
+    </div>
+
+    <div class="container" style="padding: 40px 0;">
+
+        <!-- Stats -->
+        <div class="dashboard-stats">
+            <div class="stat-card"><div class="num" id="totalArticles">6</div><div class="label">Total Articles</div></div>
+            <div class="stat-card"><div class="num" id="totalCategories">6</div><div class="label">Categories</div></div>
+            <div class="stat-card"><div class="num">0</div><div class="label">Pending Reviews</div></div>
+        </div>
+
+        <!-- Create New Article -->
+        <div style="background: #fff; border-radius: 24px; padding: 32px; margin-bottom: 40px; border: 1px solid #e9edf2; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
+            <h3 style="margin-bottom: 16px;"><i class="fas fa-plus-circle" style="color: #f97316;"></i> Create New Article</h3>
+            <form id="createArticleForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <input type="text" id="articleTitle" placeholder="Article Title" required style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; grid-column: 1 / -1;">
+                <input type="text" id="articleAuthor" placeholder="Author Name" required style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem;">
+                <input type="text" id="articleCategory" placeholder="Category (e.g. Football)" required style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem;">
+                <input type="text" id="articleImage" placeholder="Image URL (optional)" style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; grid-column: 1 / -1;">
+                <textarea id="articleSummary" placeholder="Short summary (max 150 chars)" rows="3" style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; grid-column: 1 / -1;"></textarea>
+                <button type="submit" class="btn-primary" style="grid-column: 1 / -1; justify-content: center; padding: 14px; border-radius: 60px; border: none; cursor: pointer;">
+                    <i class="fas fa-cloud-upload-alt"></i> Publish Article
+                </button>
+            </form>
+            <div id="publishMessage" style="margin-top: 12px; font-weight: 500;"></div>
+        </div>
+
+        <!-- Manage Existing Articles -->
+        <div style="background: #fff; border-radius: 24px; padding: 32px; border: 1px solid #e9edf2;">
+            <h3 style="margin-bottom: 20px;"><i class="fas fa-list-ul" style="color: #f97316;"></i> Manage Articles</h3>
+            <div style="overflow-x: auto;">
+                <table style="width:100%; border-collapse: collapse; font-size: 0.95rem;">
+                    <thead style="background: #f8fafc; text-align: left;">
+                        <tr>
+                            <th style="padding: 12px 16px;">Title</th>
+                            <th style="padding: 12px 16px;">Category</th>
+                            <th style="padding: 12px 16px;">Author</th>
+                            <th style="padding: 12px 16px; text-align:center;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminArticleList">
+                        <!-- Dynamically filled from mockArticles -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        // ===== ADMIN DASHBOARD LOGIC =====
+
+        // Redirect if not admin
+        if (!isAdmin()) {
+            window.location.href = 'login.html';
+        }
+
+        // Populate article list
+        function renderAdminTable() {
+            const tbody = document.getElementById('adminArticleList');
+            if (!tbody) return;
+            const articles = getArticles(); // from config.js
+            tbody.innerHTML = articles.map((a, index) => `
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                    <td style="padding: 12px 16px; font-weight: 600;">${a.title}</td>
+                    <td style="padding: 12px 16px;"><span style="background:#f1f5f9; padding:4px 12px; border-radius:40px; font-size:0.8rem;">${a.category}</span></td>
+                    <td style="padding: 12px 16px;">${a.author}</td>
+                    <td style="padding: 12px 16px; text-align:center;">
+                        <button onclick="editArticle('${a.id}')" style="background:none; border:none; color:#3b82f6; cursor:pointer; margin-right:8px;"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteArticle('${a.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer;"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+            document.getElementById('totalArticles').textContent = articles.length;
+            document.getElementById('totalCategories').textContent = getCategories().length;
+        }
+
+        // Delete (simulated)
+        function deleteArticle(id) {
+            if (confirm('Delete this article permanently?')) {
+                alert(`🗑️ Article ${id} deleted (simulated). In production, this calls Appwrite.`);
+                // In real Appwrite: database.deleteDocument(collectionId, id)
+                // For now, we just re-render the mock list.
+                renderAdminTable();
+            }
+        }
+
+        // Edit (simulated)
+        function editArticle(id) {
+            alert(`✏️ Edit article ${id} (simulated). You would open a modal or redirect to an edit page.`);
+        }
+
+        // Create new article
+        document.getElementById('createArticleForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const title = document.getElementById('articleTitle').value.trim();
+            const author = document.getElementById('articleAuthor').value.trim();
+            const category = document.getElementById('articleCategory').value.trim();
+            const image = document.getElementById('articleImage').value.trim() || 'https://picsum.photos/seed/sports/600/400';
+            const summary = document.getElementById('articleSummary').value.trim() || 'No summary provided.';
+
+            if (title && author && category) {
+                // In production: Appwrite database.createDocument()
+                // For mock: add to the array and re-render
+                const newArticle = {
+                    id: 'a' + Date.now(),
+                    title,
+                    summary,
+                    category,
+                    author,
+                    date: new Date().toISOString().split('T')[0],
+                    image
+                };
+                mockArticles.unshift(newArticle); // add to config.js mock array
+                renderAdminTable();
+                document.getElementById('publishMessage').innerHTML = '<span style="color:#16a34a;">✅ Article published successfully!</span>';
+                this.reset();
+                setTimeout(() => document.getElementById('publishMessage').innerHTML = '', 3000);
+            } else {
+                alert('Please fill in at least Title, Author, and Category.');
+            }
+        });
+
+        // Logout from dashboard
+        document.getElementById('dashboardLogout').addEventListener('click', function(e) {
+            e.preventDefault();
+            adminLogout();
+        });
+
+        // Init
+        document.addEventListener('DOMContentLoaded', renderAdminTable);
+    </script>
+</body>
+</html>

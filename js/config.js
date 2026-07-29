@@ -1,18 +1,27 @@
 // ============================================
-//  SPORTS ARENA – CONFIGURATION & MOCK DATA
+//  SPORTS ARENA – APPWRITE CONFIGURATION
 // ============================================
 
-// ----- APPWRITE SETTINGS (replace when ready) -----
+// ----- APPWRITE SETTINGS (ALL FILLED FOR YOU) -----
 const APPWRITE_ENDPOINT = 'https://cloud.appwrite.io/v1';
-const APPWRITE_PROJECT_ID = 'YOUR_PROJECT_ID_HERE';
+const APPWRITE_PROJECT_ID = '6a6a72e60007802abee3';        
+const APPWRITE_DATABASE_ID = '6a6a7525002ccbf4d666';      
+const APPWRITE_COLLECTION_ID = 'articles_';                
+const APPWRITE_API_KEY = 'standard_e3fa7862f1f2ddf8f9493917810fd0f2d37b066830d0eb60b5ffeb9310ee3f3d7afd5563b3a0173298f05da8749dfd5191a640d75ea2b774158d4b94f6c97e82a2bda1d43b41fa3ad13eb61b0dcc960f220633ca364581220f8127e119ce616a660fdd0b3ec484bbef4d3f89f9fb284fde4fedc7d23c2a1e70e7bd43e403cc56';
 
-// Set to FALSE when you connect Appwrite
-const USE_MOCK = true;
+// Set to TRUE only if you want to fallback to mock data
+const USE_MOCK = false;
 
+// ----- INITIALIZE APPWRITE SDK -----
+const client = new Appwrite.Client();
+const account = new Appwrite.Account(client);
+const databases = new Appwrite.Databases(client);
 
-// ============================================
-//  MOCK CATEGORIES
-// ============================================
+client
+    .setEndpoint(APPWRITE_ENDPOINT)
+    .setProject(APPWRITE_PROJECT_ID);
+
+// ----- MOCK DATA (FALLBACK) -----
 const mockCategories = [
     { id: 'cat1', name: 'Football', icon: 'fa-futbol' },
     { id: 'cat2', name: 'Basketball', icon: 'fa-basketball-ball' },
@@ -22,10 +31,96 @@ const mockCategories = [
     { id: 'cat6', name: 'Golf', icon: 'fa-golf-ball' }
 ];
 
+// ----- FUNCTIONS (REAL APPWRITE) -----
 
-// ============================================
-//  MOCK ARTICLES (6 sample stories)
-// ============================================
+// Get all articles from Appwrite
+async function getArticles() {
+    if (USE_MOCK) {
+        return mockArticles;
+    }
+    try {
+        const response = await databases.listDocuments(
+            APPWRITE_DATABASE_ID,
+            APPWRITE_COLLECTION_ID
+        );
+        return response.documents.map(doc => ({
+            id: doc.$id,
+            title: doc.title,
+            summary: doc.summary,
+            category: doc.category,
+            author: doc.author,
+            date: doc.date,
+            image: doc.image
+        }));
+    } catch (error) {
+        console.error('Error fetching articles:', error);
+        alert('❌ Failed to load articles. Check Appwrite connection.');
+        return [];
+    }
+}
+
+// Get all categories (static for now)
+async function getCategories() {
+    return mockCategories;
+}
+
+// Add a new article to Appwrite
+async function addArticle(article) {
+    if (USE_MOCK) {
+        mockArticles.unshift({
+            id: 'a' + Date.now(),
+            ...article,
+            date: new Date().toISOString().split('T')[0]
+        });
+        return true;
+    }
+    try {
+        await databases.createDocument(
+            APPWRITE_DATABASE_ID,
+            APPWRITE_COLLECTION_ID,
+            'unique()',
+            {
+                title: article.title,
+                summary: article.summary,
+                category: article.category,
+                author: article.author,
+                image: article.image || 'https://picsum.photos/seed/sports/600/400',
+                date: new Date().toISOString().split('T')[0]
+            }
+        );
+        return true;
+    } catch (error) {
+        console.error('Error adding article:', error);
+        alert('❌ Failed to publish article. Check Appwrite permissions.');
+        return false;
+    }
+}
+
+// Delete an article from Appwrite
+async function deleteArticleById(id) {
+    if (USE_MOCK) {
+        const index = mockArticles.findIndex(a => a.id === id);
+        if (index !== -1) {
+            mockArticles.splice(index, 1);
+            return true;
+        }
+        return false;
+    }
+    try {
+        await databases.deleteDocument(
+            APPWRITE_DATABASE_ID,
+            APPWRITE_COLLECTION_ID,
+            id
+        );
+        return true;
+    } catch (error) {
+        console.error('Error deleting article:', error);
+        alert('❌ Failed to delete article. Check Appwrite permissions.');
+        return false;
+    }
+}
+
+// Mock articles fallback
 const mockArticles = [
     {
         id: 'a1',
@@ -82,55 +177,3 @@ const mockArticles = [
         image: 'https://picsum.photos/seed/golf/600/400'
     }
 ];
-
-
-// ============================================
-//  EXPOSE FUNCTIONS (used by app.js & dashboard)
-// ============================================
-
-// Get all articles (mock or from Appwrite in future)
-function getArticles() {
-    if (USE_MOCK) {
-        return mockArticles;
-    }
-    // TODO: Fetch from Appwrite database
-    return mockArticles;
-}
-
-// Get all categories
-function getCategories() {
-    if (USE_MOCK) {
-        return mockCategories;
-    }
-    // TODO: Fetch from Appwrite database
-    return mockCategories;
-}
-
-// Helper to add a new article (used in dashboard)
-function addArticle(article) {
-    // In mock mode, push to the array
-    if (USE_MOCK) {
-        mockArticles.unshift({
-            id: 'a' + Date.now(),
-            ...article,
-            date: new Date().toISOString().split('T')[0]
-        });
-        return true;
-    }
-    // TODO: Save to Appwrite
-    return false;
-}
-
-// Helper to delete an article (used in dashboard)
-function deleteArticleById(id) {
-    if (USE_MOCK) {
-        const index = mockArticles.findIndex(a => a.id === id);
-        if (index !== -1) {
-            mockArticles.splice(index, 1);
-            return true;
-        }
-        return false;
-    }
-    // TODO: Delete from Appwrite
-    return false;
-  }

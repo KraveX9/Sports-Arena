@@ -10,7 +10,6 @@
 </head>
 <body>
 
-    <!-- Admin Nav -->
     <header class="navbar">
         <div class="container nav-container">
             <a href="index.html" class="brand">
@@ -26,7 +25,6 @@
         </div>
     </header>
 
-    <!-- Dashboard Hero -->
     <div class="dashboard-hero" style="background: #fff; padding: 40px 0; border-bottom: 1px solid #e9edf2;">
         <div class="container">
             <h1 style="font-size: 2.2rem;">🛡️ Admin Dashboard</h1>
@@ -36,14 +34,12 @@
 
     <div class="container" style="padding: 40px 0;">
 
-        <!-- Stats -->
         <div class="dashboard-stats">
-            <div class="stat-card"><div class="num" id="totalArticles">6</div><div class="label">Total Articles</div></div>
-            <div class="stat-card"><div class="num" id="totalCategories">6</div><div class="label">Categories</div></div>
+            <div class="stat-card"><div class="num" id="totalArticles">0</div><div class="label">Total Articles</div></div>
+            <div class="stat-card"><div class="num" id="totalCategories">0</div><div class="label">Categories</div></div>
             <div class="stat-card"><div class="num">0</div><div class="label">Pending Reviews</div></div>
         </div>
 
-        <!-- Create New Article -->
         <div style="background: #fff; border-radius: 24px; padding: 32px; margin-bottom: 40px; border: 1px solid #e9edf2; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
             <h3 style="margin-bottom: 16px;"><i class="fas fa-plus-circle" style="color: #f97316;"></i> Create New Article</h3>
             <form id="createArticleForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -59,7 +55,6 @@
             <div id="publishMessage" style="margin-top: 12px; font-weight: 500;"></div>
         </div>
 
-        <!-- Manage Existing Articles -->
         <div style="background: #fff; border-radius: 24px; padding: 32px; border: 1px solid #e9edf2;">
             <h3 style="margin-bottom: 20px;"><i class="fas fa-list-ul" style="color: #f97316;"></i> Manage Articles</h3>
             <div style="overflow-x: auto;">
@@ -73,60 +68,62 @@
                         </tr>
                     </thead>
                     <tbody id="adminArticleList">
-                        <!-- Dynamically filled from mockArticles -->
+                        <tr><td colspan="4" style="text-align:center; padding:40px; color:#94a3b8;">Loading articles...</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@11.0.0/dist/umd/appwrite.min.js"></script>
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
     <script>
-        // ===== ADMIN DASHBOARD LOGIC =====
-
-        // Redirect if not admin
         if (!isAdmin()) {
             window.location.href = 'login.html';
         }
 
-        // Populate article list
-        function renderAdminTable() {
+        async function renderAdminTable() {
             const tbody = document.getElementById('adminArticleList');
             if (!tbody) return;
-            const articles = getArticles(); // from config.js
-            tbody.innerHTML = articles.map((a, index) => `
-                <tr style="border-bottom: 1px solid #f1f5f9;">
-                    <td style="padding: 12px 16px; font-weight: 600;">${a.title}</td>
-                    <td style="padding: 12px 16px;"><span style="background:#f1f5f9; padding:4px 12px; border-radius:40px; font-size:0.8rem;">${a.category}</span></td>
-                    <td style="padding: 12px 16px;">${a.author}</td>
-                    <td style="padding: 12px 16px; text-align:center;">
-                        <button onclick="editArticle('${a.id}')" style="background:none; border:none; color:#3b82f6; cursor:pointer; margin-right:8px;"><i class="fas fa-edit"></i></button>
-                        <button onclick="deleteArticle('${a.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer;"><i class="fas fa-trash"></i></button>
-                    </td>
-                </tr>
-            `).join('');
-            document.getElementById('totalArticles').textContent = articles.length;
-            document.getElementById('totalCategories').textContent = getCategories().length;
-        }
-
-        // Delete (simulated)
-        function deleteArticle(id) {
-            if (confirm('Delete this article permanently?')) {
-                alert(`🗑️ Article ${id} deleted (simulated). In production, this calls Appwrite.`);
-                // In real Appwrite: database.deleteDocument(collectionId, id)
-                // For now, we just re-render the mock list.
-                renderAdminTable();
+            try {
+                const articles = await getArticles();
+                tbody.innerHTML = articles.map((a) => `
+                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                        <td style="padding: 12px 16px; font-weight: 600;">${a.title}</td>
+                        <td style="padding: 12px 16px;"><span style="background:#f1f5f9; padding:4px 12px; border-radius:40px; font-size:0.8rem;">${a.category}</span></td>
+                        <td style="padding: 12px 16px;">${a.author}</td>
+                        <td style="padding: 12px 16px; text-align:center;">
+                            <button onclick="editArticle('${a.id}')" style="background:none; border:none; color:#3b82f6; cursor:pointer; margin-right:8px;"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteArticle('${a.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer;"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+                document.getElementById('totalArticles').textContent = articles.length;
+                const cats = await getCategories();
+                document.getElementById('totalCategories').textContent = cats.length;
+            } catch (error) {
+                console.error('Failed to render table:', error);
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:40px; color:#ef4444;">Failed to load articles. Check Appwrite connection.</td></tr>';
             }
         }
 
-        // Edit (simulated)
-        function editArticle(id) {
-            alert(`✏️ Edit article ${id} (simulated). You would open a modal or redirect to an edit page.`);
-        }
+        window.deleteArticle = async function(id) {
+            if (confirm('Delete this article permanently?')) {
+                const success = await deleteArticleById(id);
+                if (success) {
+                    alert('🗑️ Article deleted successfully!');
+                    await renderAdminTable();
+                    if (window.loadAndRender) window.loadAndRender();
+                }
+            }
+        };
 
-        // Create new article
-        document.getElementById('createArticleForm').addEventListener('submit', function(e) {
+        window.editArticle = function(id) {
+            alert(`✏️ Edit article ${id} (feature coming soon). For now, delete and recreate.`);
+        };
+
+        document.getElementById('createArticleForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const title = document.getElementById('articleTitle').value.trim();
             const author = document.getElementById('articleAuthor').value.trim();
@@ -135,35 +132,27 @@
             const summary = document.getElementById('articleSummary').value.trim() || 'No summary provided.';
 
             if (title && author && category) {
-                // In production: Appwrite database.createDocument()
-                // For mock: add to the array and re-render
-                const newArticle = {
-                    id: 'a' + Date.now(),
-                    title,
-                    summary,
-                    category,
-                    author,
-                    date: new Date().toISOString().split('T')[0],
-                    image
-                };
-                mockArticles.unshift(newArticle); // add to config.js mock array
-                renderAdminTable();
-                document.getElementById('publishMessage').innerHTML = '<span style="color:#16a34a;">✅ Article published successfully!</span>';
-                this.reset();
-                setTimeout(() => document.getElementById('publishMessage').innerHTML = '', 3000);
+                const success = await addArticle({ title, author, category, image, summary });
+                if (success) {
+                    document.getElementById('publishMessage').innerHTML = '<span style="color:#16a34a;">✅ Article published successfully to Appwrite!</span>';
+                    this.reset();
+                    await renderAdminTable();
+                    if (window.loadAndRender) window.loadAndRender();
+                    setTimeout(() => document.getElementById('publishMessage').innerHTML = '', 3000);
+                } else {
+                    document.getElementById('publishMessage').innerHTML = '<span style="color:#dc2626;">❌ Failed to publish. Check console.</span>';
+                }
             } else {
                 alert('Please fill in at least Title, Author, and Category.');
             }
         });
 
-        // Logout from dashboard
         document.getElementById('dashboardLogout').addEventListener('click', function(e) {
             e.preventDefault();
             adminLogout();
         });
 
-        // Init
         document.addEventListener('DOMContentLoaded', renderAdminTable);
     </script>
 </body>
-        </html>
+    </html>

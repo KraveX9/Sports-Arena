@@ -1,28 +1,57 @@
 <!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>Login</title>
-<link rel="stylesheet" href="css/style.css">
-</head><body>
-<div class="container" style="max-width:420px; margin:80px auto; background:#fff; padding:40px; border-radius:24px; box-shadow:0 12px 40px rgba(0,0,0,0.08);">
-<h2 style="margin-bottom:24px;">Welcome Back</h2>
-<form id="loginForm">
-    <input type="email" id="loginEmail" placeholder="Email" style="width:100%; padding:14px; margin-bottom:16px; border-radius:12px; border:1px solid #e2e8f0;">
-    <input type="password" id="loginPassword" placeholder="Password" style="width:100%; padding:14px; margin-bottom:24px; border-radius:12px; border:1px solid #e2e8f0;">
-    <button type="submit" class="btn-primary" style="width:100%; justify-content:center;">Login</button>
-</form>
-<p style="margin-top:16px;"><a href="register.html">Create an account</a></p>
-</div>
-<script src="js/config.js"></script>
-<script src="js/auth.js"></script>
-<script>
-document.getElementById('loginForm').addEventListener('submit', function(e) {
-    e.preventDefault();
-    const email = document.getElementById('loginEmail').value;
-    const pass = document.getElementById('loginPassword').value;
-    if (loginUser(email, pass)) {
-        window.location.href = 'index.html';
-    } else {
-        alert('Invalid credentials (use any email + min 4 chars)');
-    }
-});
-</script>
-</body></html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login · Sports Arena</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body style="background: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh;">
+
+    <div style="width: 100%; max-width: 440px; padding: 20px;">
+        <div style="background: #fff; padding: 48px 40px; border-radius: 32px; box-shadow: 0 20px 60px rgba(0,0,0,0.06); border: 1px solid #e9edf2;">
+            <a href="index.html" style="display: inline-block; margin-bottom: 24px; font-weight: 700; font-size: 1.4rem; color: #0b1a2e; text-decoration: none;">
+                <i class="fas fa-trophy" style="color: #f97316;"></i> Sports<span style="color:#f97316;">Arena</span>
+            </a>
+            <h2 style="font-size: 1.8rem; margin-bottom: 8px;">🔐 Admin Access</h2>
+            <p style="color: #64748b; margin-bottom: 32px;">Please enter your administrator credentials.</p>
+
+            <form id="loginForm">
+                <div style="margin-bottom: 16px;">
+                    <label style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Admin Email</label>
+                    <input type="email" id="loginEmail" placeholder="admin@sportsarena.com" required
+                           style="width:100%; padding: 14px 18px; margin-top: 6px; border-radius: 14px; border: 1.5px solid #e2e8f0; font-size: 1rem;">
+                </div>
+                <div style="margin-bottom: 24px;">
+                    <label style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Password</label>
+                    <input type="password" id="loginPassword" placeholder="••••••••" required
+                           style="width:100%; padding: 14px 18px; margin-top: 6px; border-radius: 14px; border: 1.5px solid #e2e8f0; font-size: 1rem;">
+                </div>
+                <button type="submit" class="btn-primary" style="width:100%; justify-content:center; padding: 16px; border-radius: 60px; font-size: 1rem; border: none; cursor: pointer;">
+                    <i class="fas fa-lock"></i> Login to Dashboard
+                </button>
+            </form>
+
+            <p style="text-align: center; margin-top: 28px; color: #94a3b8; font-size: 0.9rem;">
+                <i class="fas fa-shield-alt"></i> Private area – authorised personnel only.
+            </p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const pass = document.getElementById('loginPassword').value;
+            if (adminLogin(email, pass)) {
+                window.location.href = 'dashboard.html';
+            } else {
+                alert('❌ Invalid admin credentials. Use admin@sportsarena.com / admin123 (or your Appwrite admin).');
+            }
+        });
+    </script>
+</body>
+                    </html>

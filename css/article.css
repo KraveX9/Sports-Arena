@@ -1,0 +1,25 @@
+/* Article card enhancements */
+.article-card .article-img {
+    background-size: cover;
+    background-position: center;
+    transition: transform 0.4s;
+}
+.article-card:hover .article-img {
+    transform: scale(1.02);
+}
+.article-body .read-more {
+    color: #f97316;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.article-body .read-more:hover { gap: 12px; }
+
+/* Category grid active state */
+.category-card.active {
+    border-color: #f97316;
+    background: #fff7ed;
+    box-shadow: 0 0 0 4px rgba(249,115,22,0.15);
+      }

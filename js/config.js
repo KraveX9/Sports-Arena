@@ -1,28 +1,23 @@
 // ============================================
-//  SPORTS ARENA – APPWRITE CONFIGURATION
+//  SPORTS ARENA – FIREBASE FIRESTORE CONFIG
 // ============================================
 
-// ----- APPWRITE SETTINGS (ALL FILLED) -----
-const APPWRITE_ENDPOINT = 'https://cloud.appwrite.io/v1';
-const APPWRITE_PROJECT_ID = '6a6a72e60007802abee3';
-const APPWRITE_DATABASE_ID = '6a6a7525002ccbf4d666';
-const APPWRITE_COLLECTION_ID = 'articles_';
-const APPWRITE_API_KEY = 'standard_5b419d72dddc1f9df4b182230ff0aad200e9d4df97270bb62d7bce182c80a8c2d85e6645eba409c5d50f56e3710aa82b8bc57d96e52723aaec6edc204be56a199766b8f613a7c30af94234623491ccdc0ea742565503a16d15e30b23a7109fa8793821c9d1d73ba6eab25f3e5cc043736a68d15cd953f358fc845fac0d96dc13';
+// ----- YOUR FIREBASE CONFIG (copied from Firebase Console) -----
+const firebaseConfig = {
+  apiKey: "AIzaSyBNYN6fBKqKXQEztVrdsVYqeZJO6q4LCx8",
+  authDomain: "sportsarenablog-776bf.firebaseapp.com",
+  projectId: "sportsarenablog-776bf",
+  storageBucket: "sportsarenablog-776bf.firebasestorage.app",
+  messagingSenderId: "1056924791232",
+  appId: "1:1056924791232:web:46ac3b010b86bc3c439825",
+  measurementId: "G-JGJ2N4KH0F"
+};
 
-// Set to FALSE – we are using real Appwrite
-const USE_MOCK = false;
+// ----- INITIALIZE FIREBASE (compat mode) -----
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-// ----- INITIALIZE APPWRITE SDK -----
-const client = new Appwrite.Client();
-const account = new Appwrite.Account(client);
-const databases = new Appwrite.Databases(client);
-
-client
-    .setEndpoint(APPWRITE_ENDPOINT)
-    .setProject(APPWRITE_PROJECT_ID)
-    .setKey(APPWRITE_API_KEY); // 🔑 This is the key
-
-// ----- MOCK DATA (FALLBACK) -----
+// ----- MOCK CATEGORIES (used for the UI) -----
 const mockCategories = [
     { id: 'cat1', name: 'Football', icon: 'fa-futbol' },
     { id: 'cat2', name: 'Basketball', icon: 'fa-basketball-ball' },
@@ -32,149 +27,58 @@ const mockCategories = [
     { id: 'cat6', name: 'Golf', icon: 'fa-golf-ball' }
 ];
 
-// ----- FUNCTIONS (USING APPWRITE) -----
+// ============================================
+//  FIRESTORE FUNCTIONS (for your blog)
+// ============================================
 
-// Get all articles
+// GET all articles (ordered by date, newest first)
 async function getArticles() {
-    if (USE_MOCK) {
-        return mockArticles;
-    }
     try {
-        const response = await databases.listDocuments(
-            APPWRITE_DATABASE_ID,
-            APPWRITE_COLLECTION_ID
-        );
-        return response.documents.map(doc => ({
-            id: doc.$id,
-            title: doc.title,
-            summary: doc.summary,
-            category: doc.category,
-            author: doc.author,
-            date: doc.date,
-            image: doc.image
+        const snapshot = await db.collection('articles')
+            .orderBy('date', 'desc')
+            .get();
+        
+        return snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
         }));
     } catch (error) {
         console.error('Error fetching articles:', error);
-        alert('❌ Failed to load articles. Check Appwrite connection.');
         return [];
     }
 }
 
-// Get categories (static)
+// GET categories (static)
 async function getCategories() {
     return mockCategories;
 }
 
-// Add a new article
+// ADD a new article to Firestore
 async function addArticle(article) {
-    if (USE_MOCK) {
-        mockArticles.unshift({
-            id: 'a' + Date.now(),
-            ...article,
-            date: new Date().toISOString().split('T')[0]
-        });
-        return true;
-    }
     try {
-        await databases.createDocument(
-            APPWRITE_DATABASE_ID,
-            APPWRITE_COLLECTION_ID,
-            'unique()',
-            {
-                title: article.title,
-                summary: article.summary,
-                category: article.category,
-                author: article.author,
-                image: article.image || 'https://picsum.photos/seed/sports/600/400',
-                date: new Date().toISOString().split('T')[0]
-            }
-        );
-        return true;
+        const docRef = await db.collection('articles').add({
+            title: article.title,
+            summary: article.summary,
+            category: article.category,
+            author: article.author,
+            image: article.image || 'https://picsum.photos/seed/sports/600/400',
+            date: new Date().toISOString().split('T')[0],
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        return { success: true, id: docRef.id };
     } catch (error) {
         console.error('Error adding article:', error);
-        alert('❌ Failed to publish article. Check Appwrite permissions.');
-        return false;
+        return { success: false, error: error.message };
     }
 }
 
-// Delete an article
+// DELETE an article from Firestore
 async function deleteArticleById(id) {
-    if (USE_MOCK) {
-        const index = mockArticles.findIndex(a => a.id === id);
-        if (index !== -1) {
-            mockArticles.splice(index, 1);
-            return true;
-        }
-        return false;
-    }
     try {
-        await databases.deleteDocument(
-            APPWRITE_DATABASE_ID,
-            APPWRITE_COLLECTION_ID,
-            id
-        );
-        return true;
+        await db.collection('articles').doc(id).delete();
+        return { success: true };
     } catch (error) {
         console.error('Error deleting article:', error);
-        alert('❌ Failed to delete article. Check Appwrite permissions.');
-        return false;
+        return { success: false, error: error.message };
     }
 }
-
-// Mock articles fallback (only used if USE_MOCK is true)
-const mockArticles = [
-    {
-        id: 'a1',
-        title: 'Champions League Final: Epic Comeback Stuns Europe',
-        summary: 'In a night of high drama, the underdogs overturned a 2-goal deficit to lift the trophy in extra time.',
-        category: 'Football',
-        author: 'James Rodriguez',
-        date: '2026-07-28',
-        image: 'https://picsum.photos/seed/football/600/400'
-    },
-    {
-        id: 'a2',
-        title: 'NBA Finals MVP Delivers Historic Triple-Double',
-        summary: 'The superstar put on a clinic with 40 points, 18 rebounds, and 12 assists in the series clincher.',
-        category: 'Basketball',
-        author: 'Sarah Thompson',
-        date: '2026-07-27',
-        image: 'https://picsum.photos/seed/basketball/600/400'
-    },
-    {
-        id: 'a3',
-        title: 'Ashes Thriller: England Snatch Victory in Final Over',
-        summary: 'A sensational last-wicket partnership turned the tables on Australia in a nerve-shredding finish.',
-        category: 'Cricket',
-        author: 'Ravi Shastri',
-        date: '2026-07-26',
-        image: 'https://picsum.photos/seed/cricket/600/400'
-    },
-    {
-        id: 'a4',
-        title: 'Wimbledon Upset: Unseeded Star Reaches Semis',
-        summary: 'The 22-year-old wildcard continues her fairy-tale run, defeating the world No.2 in straight sets.',
-        category: 'Tennis',
-        author: 'Martina Navratilova',
-        date: '2026-07-25',
-        image: 'https://picsum.photos/seed/tennis/600/400'
-    },
-    {
-        id: 'a5',
-        title: 'F1 Chaos: Late Crash Hands Victory to Local Hero',
-        summary: 'A dramatic multi-car collision in the final laps allowed the hometown driver to claim his first win.',
-        category: 'Motorsport',
-        author: 'Lewis Hamilton',
-        date: '2026-07-24',
-        image: 'https://picsum.photos/seed/f1/600/400'
-    },
-    {
-        id: 'a6',
-        title: 'PGA Championship: Record-Breaking 62 Takes Lead',
-        summary: 'The young gun fired a flawless round with 10 birdies to shatter the course record by two shots.',
-        category: 'Golf',
-        author: 'Tiger Woods',
-        date: '2026-07-23',
-        image: 'https://picsum.photos/seed/golf/600/400'
-    }
-];

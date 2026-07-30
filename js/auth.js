@@ -1,46 +1,39 @@
 // ============================================
-//  ADMIN AUTHENTICATION (APPWRITE)
+//  ADMIN AUTHENTICATION (HARDCODED FALLBACK)
 // ============================================
 
-// Check if current user is an admin (checks localStorage)
+// HARDCODED ADMIN CREDENTIALS (FOR TESTING ONLY)
+const ADMIN_EMAIL = 'jeffzilla393@gmail.com';
+const ADMIN_PASSWORD = 'admin123';
+
 function isAdmin() {
     const user = JSON.parse(localStorage.getItem('sportsArenaAdmin'));
     return user && user.role === 'admin';
 }
 
-// Admin login using Appwrite
+// Admin login - uses hardcoded credentials
 async function adminLogin(email, password) {
-    try {
-        await account.createEmailPasswordSession(email, password);
-        const user = await account.get();
-
+    // Bypass Appwrite – just check hardcoded credentials
+    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
         const adminUser = {
-            email: user.email,
-            name: user.name || 'Admin',
-            id: user.$id,
+            email: ADMIN_EMAIL,
+            name: 'Arena Admin',
             role: 'admin'
         };
         localStorage.setItem('sportsArenaAdmin', JSON.stringify(adminUser));
         updateNav();
         return true;
-    } catch (error) {
-        console.error('Login error:', error);
-        alert('❌ Invalid admin credentials. Please check your email and password.');
+    } else {
+        alert('❌ Invalid credentials. Use jeffzilla393@gmail.com / admin123');
         return false;
     }
 }
 
 // Admin logout
 async function adminLogout() {
-    try {
-        await account.deleteSession('current');
-    } catch (e) {
-        console.warn('Session already expired.');
-    } finally {
-        localStorage.removeItem('sportsArenaAdmin');
-        updateNav();
-        window.location.href = 'index.html';
-    }
+    localStorage.removeItem('sportsArenaAdmin');
+    updateNav();
+    window.location.href = 'index.html';
 }
 
 // Update navigation

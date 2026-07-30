@@ -13,11 +13,11 @@ const firebaseConfig = {
   measurementId: "G-JGJ2N4KH0F"
 };
 
-// ----- INITIALIZE FIREBASE (compat mode) -----
+// ----- INITIALIZE FIREBASE -----
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ----- MOCK CATEGORIES (used for the UI) -----
+// ----- MOCK CATEGORIES -----
 const mockCategories = [
     { id: 'cat1', name: 'Football', icon: 'fa-futbol' },
     { id: 'cat2', name: 'Basketball', icon: 'fa-basketball-ball' },
@@ -28,15 +28,18 @@ const mockCategories = [
 ];
 
 // ============================================
-//  FIRESTORE FUNCTIONS (for your blog)
+//  FIRESTORE FUNCTIONS
 // ============================================
 
-// GET all articles (ordered by date, newest first)
 async function getArticles() {
     try {
         const snapshot = await db.collection('articles')
             .orderBy('date', 'desc')
             .get();
+        
+        if (snapshot.empty) {
+            return [];
+        }
         
         return snapshot.docs.map(doc => ({
             id: doc.id,
@@ -48,12 +51,10 @@ async function getArticles() {
     }
 }
 
-// GET categories (static)
 async function getCategories() {
     return mockCategories;
 }
 
-// ADD a new article to Firestore
 async function addArticle(article) {
     try {
         const docRef = await db.collection('articles').add({
@@ -72,7 +73,6 @@ async function addArticle(article) {
     }
 }
 
-// DELETE an article from Firestore
 async function deleteArticleById(id) {
     try {
         await db.collection('articles').doc(id).delete();
@@ -81,4 +81,4 @@ async function deleteArticleById(id) {
         console.error('Error deleting article:', error);
         return { success: false, error: error.message };
     }
-}
+      }

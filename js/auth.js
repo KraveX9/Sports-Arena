@@ -1,42 +1,36 @@
 // ============================================
-//  ADMIN AUTHENTICATION (HARDCODED FALLBACK)
+//  ADMIN AUTHENTICATION (SIMPLE HARDCODED)
 // ============================================
 
-// HARDCODED ADMIN CREDENTIALS (FOR TESTING ONLY)
-const ADMIN_EMAIL = 'jeffzilla393@gmail.com';
-const ADMIN_PASSWORD = 'admin123';
+const ADMIN_EMAIL = 'admin@sportsarena.com';
+const ADMIN_PASSWORD = 'SportsArena2026!';
 
 function isAdmin() {
     const user = JSON.parse(localStorage.getItem('sportsArenaAdmin'));
     return user && user.role === 'admin';
 }
 
-// Admin login - uses hardcoded credentials
-async function adminLogin(email, password) {
-    // Bypass Appwrite – just check hardcoded credentials
+function adminLogin(email, password) {
     if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-        const adminUser = {
+        localStorage.setItem('sportsArenaAdmin', JSON.stringify({
             email: ADMIN_EMAIL,
             name: 'Arena Admin',
             role: 'admin'
-        };
-        localStorage.setItem('sportsArenaAdmin', JSON.stringify(adminUser));
+        }));
         updateNav();
         return true;
     } else {
-        alert('❌ Invalid credentials. Use jeffzilla393@gmail.com / admin123');
+        alert('❌ Invalid admin credentials. Use the correct email and password.');
         return false;
     }
 }
 
-// Admin logout
-async function adminLogout() {
+function adminLogout() {
     localStorage.removeItem('sportsArenaAdmin');
     updateNav();
     window.location.href = 'index.html';
 }
 
-// Update navigation
 function updateNav() {
     const authNav = document.getElementById('authNav');
     const adminNav = document.getElementById('adminNav');

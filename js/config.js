@@ -2,14 +2,14 @@
 //  SPORTS ARENA – APPWRITE CONFIGURATION
 // ============================================
 
-// ----- APPWRITE SETTINGS (ALL FILLED FOR YOU) -----
+// ----- APPWRITE SETTINGS (ALL FILLED) -----
 const APPWRITE_ENDPOINT = 'https://cloud.appwrite.io/v1';
-const APPWRITE_PROJECT_ID = '6a6a72e60007802abee3';        
-const APPWRITE_DATABASE_ID = '6a6a7525002ccbf4d666';      
-const APPWRITE_COLLECTION_ID = 'articles_';                
-const APPWRITE_API_KEY = 'standard_e3fa7862f1f2ddf8f9493917810fd0f2d37b066830d0eb60b5ffeb9310ee3f3d7afd5563b3a0173298f05da8749dfd5191a640d75ea2b774158d4b94f6c97e82a2bda1d43b41fa3ad13eb61b0dcc960f220633ca364581220f8127e119ce616a660fdd0b3ec484bbef4d3f89f9fb284fde4fedc7d23c2a1e70e7bd43e403cc56';
+const APPWRITE_PROJECT_ID = '6a6a72e60007802abee3';
+const APPWRITE_DATABASE_ID = '6a6a7525002ccbf4d666';
+const APPWRITE_COLLECTION_ID = 'articles_';
+const APPWRITE_API_KEY = 'standard_5b419d72dddc1f9df4b182230ff0aad200e9d4df97270bb62d7bce182c80a8c2d85e6645eba409c5d50f56e3710aa82b8bc57d96e52723aaec6edc204be56a199766b8f613a7c30af94234623491ccdc0ea742565503a16d15e30b23a7109fa8793821c9d1d73ba6eab25f3e5cc043736a68d15cd953f358fc845fac0d96dc13';
 
-// Set to TRUE only if you want to fallback to mock data
+// Set to FALSE – we are using real Appwrite
 const USE_MOCK = false;
 
 // ----- INITIALIZE APPWRITE SDK -----
@@ -19,7 +19,8 @@ const databases = new Appwrite.Databases(client);
 
 client
     .setEndpoint(APPWRITE_ENDPOINT)
-    .setProject(APPWRITE_PROJECT_ID);
+    .setProject(APPWRITE_PROJECT_ID)
+    .setKey(APPWRITE_API_KEY); // 🔑 This is the key
 
 // ----- MOCK DATA (FALLBACK) -----
 const mockCategories = [
@@ -31,9 +32,9 @@ const mockCategories = [
     { id: 'cat6', name: 'Golf', icon: 'fa-golf-ball' }
 ];
 
-// ----- FUNCTIONS (REAL APPWRITE) -----
+// ----- FUNCTIONS (USING APPWRITE) -----
 
-// Get all articles from Appwrite
+// Get all articles
 async function getArticles() {
     if (USE_MOCK) {
         return mockArticles;
@@ -59,12 +60,12 @@ async function getArticles() {
     }
 }
 
-// Get all categories (static for now)
+// Get categories (static)
 async function getCategories() {
     return mockCategories;
 }
 
-// Add a new article to Appwrite
+// Add a new article
 async function addArticle(article) {
     if (USE_MOCK) {
         mockArticles.unshift({
@@ -96,7 +97,7 @@ async function addArticle(article) {
     }
 }
 
-// Delete an article from Appwrite
+// Delete an article
 async function deleteArticleById(id) {
     if (USE_MOCK) {
         const index = mockArticles.findIndex(a => a.id === id);
@@ -120,7 +121,7 @@ async function deleteArticleById(id) {
     }
 }
 
-// Mock articles fallback
+// Mock articles fallback (only used if USE_MOCK is true)
 const mockArticles = [
     {
         id: 'a1',

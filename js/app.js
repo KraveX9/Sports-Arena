@@ -1,5 +1,5 @@
 // ============================================
-//  PUBLIC BLOG ENGINE (ASYNC)
+//  PUBLIC BLOG ENGINE (FIREBASE)
 // ============================================
 
 let currentCategory = 'All';
@@ -7,10 +7,22 @@ let displayedCount = 6;
 let allArticles = [];
 
 async function loadAndRender() {
-    allArticles = await getArticles();
-    renderCategories();
-    renderArticles();
-    updateStats();
+    try {
+        allArticles = await getArticles();
+        renderCategories();
+        renderArticles();
+        updateStats();
+    } catch (error) {
+        const grid = document.getElementById('articlesGrid');
+        if (grid) {
+            grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:60px 20px; color:#dc2626; background:#fef2f2; border-radius:16px;">
+                <i class="fas fa-exclamation-triangle" style="font-size:2rem; display:block; margin-bottom:12px;"></i>
+                <strong>Failed to load articles</strong><br>
+                <span style="font-size:0.9rem; color:#991b1b;">${error.message}</span>
+                <br><small style="color:#6b7280;">Check Firebase connection and Firestore permissions.</small>
+            </div>`;
+        }
+    }
 }
 
 function renderCategories() {
@@ -66,7 +78,7 @@ function renderArticles() {
     }
 
     if (sliced.length === 0) {
-        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:60px 0; color:#64748b;">No articles found.</div>`;
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:60px 0; color:#64748b;">No articles found. Create your first one in the dashboard!</div>`;
         return;
     }
 

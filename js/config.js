@@ -1,5 +1,5 @@
 // ============================================
-//  SPORTS ARENA – FIREBASE FIRESTORE + IMGBB
+//  SPORTS ARENA – FIRESTORE + IMGBB + DATE PICKER
 // ============================================
 
 // ----- FIREBASE CONFIG -----
@@ -19,15 +19,25 @@ const db = firebase.firestore();
 // ----- IMGBB API KEY -----
 const IMGBB_API_KEY = '17e055fb3d68d047117985b03c255ba3';
 
-// ----- MOCK CATEGORIES -----
-const mockCategories = [
-    { id: 'cat1', name: 'Football', icon: 'fa-futbol' },
-    { id: 'cat2', name: 'Basketball', icon: 'fa-basketball-ball' },
-    { id: 'cat3', name: 'Cricket', icon: 'fa-baseball-ball' },
-    { id: 'cat4', name: 'Tennis', icon: 'fa-table-tennis' },
-    { id: 'cat5', name: 'Motorsport', icon: 'fa-car' },
-    { id: 'cat6', name: 'Golf', icon: 'fa-golf-ball' }
+// ============================================
+//  CATEGORIES (HARDCODED – edit as needed)
+// ============================================
+const CATEGORIES = [
+    'Football',
+    'Basketball',
+    'Cricket',
+    'Tennis',
+    'Motorsport',
+    'Golf'
 ];
+
+async function getCategories() {
+    return CATEGORIES.map(name => ({ id: name, name }));
+}
+
+// ============================================
+//  ARTICLE FUNCTIONS
+// ============================================
 
 async function getArticles() {
     try {
@@ -37,10 +47,6 @@ async function getArticles() {
         console.error('Error fetching articles:', error);
         return [];
     }
-}
-
-async function getCategories() {
-    return mockCategories;
 }
 
 async function uploadImage(file) {
@@ -69,6 +75,7 @@ async function uploadImage(file) {
     });
 }
 
+// 🔥 UPDATED: Accepts a custom date
 async function addArticle(article) {
     try {
         const docRef = await db.collection('articles').add({
@@ -77,7 +84,7 @@ async function addArticle(article) {
             category: article.category,
             author: article.author,
             image: article.image || 'https://picsum.photos/seed/sports/600/400',
-            date: new Date().toISOString().split('T')[0],
+            date: article.date || new Date().toISOString().split('T')[0], // Use custom date or fallback to today
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         return { success: true, id: docRef.id };
@@ -86,6 +93,7 @@ async function addArticle(article) {
     }
 }
 
+// 🔥 UPDATED: Accepts a custom date
 async function updateArticle(id, article) {
     try {
         await db.collection('articles').doc(id).update({
@@ -94,7 +102,7 @@ async function updateArticle(id, article) {
             category: article.category,
             author: article.author,
             image: article.image || 'https://picsum.photos/seed/sports/600/400',
-            date: new Date().toISOString().split('T')[0]
+            date: article.date || new Date().toISOString().split('T')[0]
         });
         return { success: true };
     } catch (error) {
@@ -109,4 +117,4 @@ async function deleteArticleById(id) {
     } catch (error) {
         return { success: false, error: error.message };
     }
-     }
+}

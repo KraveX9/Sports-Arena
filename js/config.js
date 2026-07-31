@@ -16,7 +16,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ----- IMGBB API KEY (YOUR KEY INSERTED) -----
+// ----- IMGBB API KEY -----
 const IMGBB_API_KEY = '17e055fb3d68d047117985b03c255ba3';
 
 // ----- MOCK CATEGORIES -----
@@ -29,19 +29,10 @@ const mockCategories = [
     { id: 'cat6', name: 'Golf', icon: 'fa-golf-ball' }
 ];
 
-// ============================================
-//  FIRESTORE FUNCTIONS
-// ============================================
-
 async function getArticles() {
     try {
-        const snapshot = await db.collection('articles')
-            .orderBy('date', 'desc')
-            .get();
-        return snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
+        const snapshot = await db.collection('articles').orderBy('date', 'desc').get();
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (error) {
         console.error('Error fetching articles:', error);
         return [];
@@ -52,10 +43,8 @@ async function getCategories() {
     return mockCategories;
 }
 
-// 🔥 Upload image to ImgBB (100% FREE – using your key)
 async function uploadImage(file) {
     if (!file) return null;
-
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.readAsDataURL(file);
@@ -65,12 +54,7 @@ async function uploadImage(file) {
                 const formData = new FormData();
                 formData.append('key', IMGBB_API_KEY);
                 formData.append('image', base64Image);
-
-                const response = await fetch('https://api.imgbb.com/1/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-
+                const response = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
                 const data = await response.json();
                 if (data.success) {
                     resolve(data.data.url);
@@ -98,7 +82,6 @@ async function addArticle(article) {
         });
         return { success: true, id: docRef.id };
     } catch (error) {
-        console.error('Error adding article:', error);
         return { success: false, error: error.message };
     }
 }
@@ -115,7 +98,6 @@ async function updateArticle(id, article) {
         });
         return { success: true };
     } catch (error) {
-        console.error('Error updating article:', error);
         return { success: false, error: error.message };
     }
 }
@@ -125,7 +107,6 @@ async function deleteArticleById(id) {
         await db.collection('articles').doc(id).delete();
         return { success: true };
     } catch (error) {
-        console.error('Error deleting article:', error);
         return { success: false, error: error.message };
     }
-}
+     }

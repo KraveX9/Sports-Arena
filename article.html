@@ -69,6 +69,7 @@
                     <li id="authNav"><a href="login.html" class="btn-primary-nav"><i class="fas fa-lock"></i> Admin Login</a></li>
                     <li id="adminNav" style="display:none;">
                         <a href="dashboard.html" class="btn-primary-nav"><i class="fas fa-user-cog"></i> Dashboard</a>
+                        <a href="analytics.html" class="btn-primary-nav"><i class="fas fa-chart-line"></i> Analytics</a>
                         <a href="#" id="logoutBtn" class="btn-outline-nav"><i class="fas fa-sign-out-alt"></i> Logout</a>
                     </li>
                 </ul>
@@ -103,6 +104,7 @@
                         <li><a href="index.html#categories">Categories</a></li>
                         <li><a href="index.html#latest">Latest</a></li>
                         <li><a href="dashboard.html">Dashboard</a></li>
+                        <li><a href="analytics.html">Analytics</a></li>
                     </ul>
                 </div>
                 <div class="footer-links">
@@ -168,13 +170,8 @@
                     return;
                 }
 
-                // Log view with country
-                const country = await getCountry();
-                await incrementViewsAndLog(article.id, slug, country);
-
-                // Refresh to get updated view count
-                const updatedArticle = await getArticleBySlug(slug);
-                const viewCount = updatedArticle?.views || 0;
+                // 🔥 Load the content FIRST so user sees it quickly
+                const viewCount = article.views || 0;
                 const comments = await getComments(slug);
 
                 const url = window.location.href;
@@ -241,6 +238,10 @@
 
                 document.getElementById('articleContainer').innerHTML = html;
 
+                // 🔥 Now log view in the background (does not block)
+                const country = await getCountry();
+                incrementViewsAndLog(article.id, slug, country); // fire and forget
+
                 // Comment form
                 const form = document.getElementById('commentForm');
                 if (form) {
@@ -260,7 +261,6 @@
                         const result = await addComment(slug, name, comment, email);
                         if (result.success) {
                             msgDiv.innerHTML = '<span style="color:#16a34a;">✅ Comment posted!</span>';
-                            // Reload comments
                             const fresh = await getComments(slug);
                             const list = document.querySelector('.comment-list');
                             const countDiv = document.querySelector('.comments-count');
@@ -287,6 +287,7 @@
                     });
                 }
             } catch(err) {
+                console.error(err);
                 document.getElementById('articleContainer').innerHTML = `
                     <div style="text-align:center; padding:40px 0;">
                         <i class="fas fa-exclamation-triangle" style="font-size:2rem; color:#dc2626;"></i>
@@ -301,4 +302,21 @@
         window.copyLink = function(url) {
             const realUrl = decodeURIComponent(url);
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(realUrl).then(() => alert('✅ Link copied!')).catch(() => fallbackCo
+                navigator.clipboard.writeText(realUrl).then(() => alert('✅ Link copied!')).catch(() => fallbackCopy(realUrl));
+            } else {
+                fallbackCopy(realUrl);
+            }
+        };
+        function fallbackCopy(text) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            try { document.execCommand('copy'); alert('✅ Link copied!'); } catch(e) { alert('❌ Failed to copy.'); }
+            document.body.removeChild(ta);
+        }
+
+        document.addEventListener('DOMContentLoaded', loadArticle);
+    </script>
+</body>
+</html>

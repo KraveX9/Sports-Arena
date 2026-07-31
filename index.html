@@ -11,8 +11,6 @@
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/article.css" />
     <link rel="stylesheet" href="css/dashboard.css" />
-
-    <!-- 🔥 FIREBASE SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
@@ -83,6 +81,15 @@
                 <h2><i class="fas fa-newspaper section-icon"></i> Latest Stories</h2>
                 <p>Fresh from the press — curated for you</p>
             </div>
+
+            <!-- 🔥 NEW: Search Bar -->
+            <div style="max-width: 500px; margin: 0 auto 32px;">
+                <div style="display: flex; background: #fff; border-radius: 60px; border: 1.5px solid #e2e8f0; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                    <i class="fas fa-search" style="padding: 14px 0 14px 18px; color: #94a3b8;"></i>
+                    <input type="text" id="searchInput" placeholder="Search articles..." style="flex:1; border:none; padding: 14px 12px; font-size: 1rem; outline: none; background: transparent; color: #0b1a2e;">
+                </div>
+            </div>
+
             <div class="articles-grid" id="articlesGrid"></div>
             <div class="load-more-wrapper">
                 <button class="btn-outline" id="loadMoreBtn"><i class="fas fa-sync-alt"></i> Load More</button>

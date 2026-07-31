@@ -1,5 +1,5 @@
 // ============================================
-//  SPORTS ARENA – FIRESTORE + IMGBB + DATE PICKER
+//  SPORTS ARENA – FIRESTORE + IMGBB + SLUGS
 // ============================================
 
 // ----- FIREBASE CONFIG -----
@@ -20,7 +20,7 @@ const db = firebase.firestore();
 const IMGBB_API_KEY = '17e055fb3d68d047117985b03c255ba3';
 
 // ============================================
-//  CATEGORIES (HARDCODED – edit as needed)
+//  CATEGORIES (HARDCODED)
 // ============================================
 const CATEGORIES = [
     'Football',
@@ -36,6 +36,17 @@ async function getCategories() {
 }
 
 // ============================================
+//  SLUG GENERATOR
+// ============================================
+function generateSlug(title) {
+    return title
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '')   // Remove special characters
+        .replace(/\s+/g, '-')           // Replace spaces with hyphens
+        .slice(0, 50);                  // Limit to 50 characters
+}
+
+// ============================================
 //  ARTICLE FUNCTIONS
 // ============================================
 
@@ -46,6 +57,22 @@ async function getArticles() {
     } catch (error) {
         console.error('Error fetching articles:', error);
         return [];
+    }
+}
+
+// 🔥 NEW: Fetch a single article by its slug
+async function getArticleBySlug(slug) {
+    try {
+        const snapshot = await db.collection('articles')
+            .where('slug', '==', slug)
+            .limit(1)
+            .get();
+        if (snapshot.empty) return null;
+        const doc = snapshot.docs[0];
+        return { id: doc.id, ...doc.data() };
+    } catch (error) {
+        console.error('Error fetching article by slug:', error);
+        return null;
     }
 }
 
@@ -75,16 +102,18 @@ async function uploadImage(file) {
     });
 }
 
-// 🔥 UPDATED: Accepts a custom date
+// 🔥 UPDATED: Generates slug from title
 async function addArticle(article) {
     try {
+        const slug = generateSlug(article.title);
         const docRef = await db.collection('articles').add({
             title: article.title,
             summary: article.summary,
             category: article.category,
             author: article.author,
             image: article.image || 'https://picsum.photos/seed/sports/600/400',
-            date: article.date || new Date().toISOString().split('T')[0], // Use custom date or fallback to today
+            date: article.date || new Date().toISOString().split('T')[0],
+            slug: slug,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         return { success: true, id: docRef.id };
@@ -93,16 +122,18 @@ async function addArticle(article) {
     }
 }
 
-// 🔥 UPDATED: Accepts a custom date
+// 🔥 UPDATED: Regenerates slug if title changes
 async function updateArticle(id, article) {
     try {
+        const slug = generateSlug(article.title);
         await db.collection('articles').doc(id).update({
             title: article.title,
             summary: article.summary,
             category: article.category,
             author: article.author,
             image: article.image || 'https://picsum.photos/seed/sports/600/400',
-            date: article.date || new Date().toISOString().split('T')[0]
+            date: article.date || new Date().toISOString().split('T')[0],
+            slug: slug
         });
         return { success: true };
     } catch (error) {
@@ -117,4 +148,4 @@ async function deleteArticleById(id) {
     } catch (error) {
         return { success: false, error: error.message };
     }
-}
+  }

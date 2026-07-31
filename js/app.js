@@ -1,8 +1,9 @@
 // ============================================
-//  PUBLIC BLOG ENGINE (FIREBASE)
+//  PUBLIC BLOG ENGINE (WITH SEARCH)
 // ============================================
 
 let currentCategory = 'All';
+let currentSearch = '';
 let displayedCount = 6;
 let allArticles = [];
 
@@ -10,7 +11,7 @@ async function loadAndRender() {
     try {
         allArticles = await getArticles();
         renderCategories();
-        renderArticles();
+        applyFilters();
         updateStats();
     } catch (error) {
         const grid = document.getElementById('articlesGrid');
@@ -41,7 +42,7 @@ function renderCategories() {
                 this.classList.add('active');
                 currentCategory = this.dataset.category;
                 displayedCount = 6;
-                renderArticles();
+                applyFilters();
             });
         });
 
@@ -59,16 +60,34 @@ function renderCategories() {
     });
 }
 
-function renderArticles() {
+// 🔥 NEW: Filter articles by category + search
+function getFilteredArticles() {
+    let filtered = allArticles;
+    if (currentCategory !== 'All') {
+        filtered = filtered.filter(a => a.category === currentCategory);
+    }
+    if (currentSearch.trim() !== '') {
+        const searchLower = currentSearch.toLowerCase().trim();
+        filtered = filtered.filter(a => 
+            a.title.toLowerCase().includes(searchLower) ||
+            a.category.toLowerCase().includes(searchLower) ||
+            a.author.toLowerCase().includes(searchLower)
+        );
+    }
+    return filtered;
+}
+
+function applyFilters() {
+    const filtered = getFilteredArticles();
+    renderArticles(filtered);
+}
+
+function renderArticles(filteredArticles) {
     const grid = document.getElementById('articlesGrid');
     if (!grid) return;
 
-    let articles = allArticles;
-    if (currentCategory !== 'All') {
-        articles = articles.filter(a => a.category === currentCategory);
-    }
-    const total = articles.length;
-    const sliced = articles.slice(0, displayedCount);
+    const total = filteredArticles.length;
+    const sliced = filteredArticles.slice(0, displayedCount);
     const loadBtn = document.getElementById('loadMoreBtn');
 
     if (displayedCount >= total) {
@@ -78,7 +97,7 @@ function renderArticles() {
     }
 
     if (sliced.length === 0) {
-        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:60px 0; color:#64748b;">No articles found. Create your first one in the dashboard!</div>`;
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:60px 0; color:#64748b;">No articles found. Try a different search or category.</div>`;
         return;
     }
 
@@ -117,14 +136,24 @@ function updateStats() {
     if (statAuthors) statAuthors.textContent = authors.size;
 }
 
+// 🔥 Search input listener
 document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            currentSearch = this.value;
+            displayedCount = 6;
+            applyFilters();
+        });
+    }
+
     loadAndRender();
 
     const loadBtn = document.getElementById('loadMoreBtn');
     if (loadBtn) {
         loadBtn.addEventListener('click', function() {
             displayedCount += 6;
-            renderArticles();
+            applyFilters();
         });
     }
 

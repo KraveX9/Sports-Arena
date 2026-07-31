@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sports Arena · Article</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/article.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <style>
+        .single-article {
+            padding: 40px 0 60px;
+            background: #f8fafc;
+        }
+        .single-article .container {
+            max-width: 720px;
+            background: #fff;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+            border: 1px solid #e9edf2;
+        }
+        .single-article .article-image {
+            width: 100%;
+            max-height: 400px;
+            object-fit: cover;
+            border-radius: 16px;
+            margin-bottom: 24px;
+        }
+        .single-article .article-category-badge {
+            display: inline-block;
+            background: #f97316;
+            color: #fff;
+            padding: 4px 16px;
+            border-radius: 40px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+        }
+        .single-article h1 {
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: #0b1a2e;
+            line-height: 1.2;
+            margin-bottom: 12px;
+        }
+        .single-article .article-meta {
+            display: flex;
+            gap: 24px;
+            color: #64748b;
+            font-size: 0.95rem;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .single-article .article-meta i {
+            margin-right: 6px;
+        }
+        .single-article .article-summary {
+            font-size: 1.15rem;
+            line-height: 1.7;
+            color: #1e293b;
+            white-space: pre-wrap;
+        }
+        .single-article .back-link {
+            display: inline-block;
+            margin-top: 32px;
+            color: #f97316;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .single-article .back-link:hover {
+            text-decoration: underline;
+        }
+        .single-article .share-section {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #e9edf2;
+        }
+        .single-article .share-section .share-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        .single-article .share-section .share-buttons a,
+        .single-article .share-section .share-buttons button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: none;
+            background: #f1f5f9;
+            color: #64748b;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.2s ease;
+            text-decoration: none;
+        }
+        .single-article .share-section .share-buttons a:hover,
+        .single-article .share-section .share-buttons button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+        }
+        .single-article .share-section .share-buttons .twitter:hover { background: #1da1f2; color: #fff; }
+        .single-article .share-section .share-buttons .facebook:hover { background: #1877f2; color: #fff; }
+        .single-article .share-section .share-buttons .whatsapp:hover { background: #25d366; color: #fff; }
+        .single-article .share-section .share-buttons .copy:hover { background: #0b1a2e; color: #fff; }
+        @media (max-width: 640px) {
+            .single-article .container { padding: 24px; }
+            .single-article h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="navbar" id="mainNav">
+        <div class="container nav-container">
+            <a href="index.html" class="brand">
+                <i class="fas fa-trophy brand-icon"></i>
+                <span>Sports<span class="brand-highlight">Arena</span></span>
+            </a>
+            <nav class="nav-links">
+                <ul>
+                    <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+                    <li id="authNav"><a href="login.html" class="btn-primary-nav"><i class="fas fa-lock"></i> Admin Login</a></li>
+                    <li id="adminNav" style="display:none;">
+                        <a href="dashboard.html" class="btn-primary-nav"><i class="fas fa-user-cog"></i> Dashboard</a>
+                        <a href="#" id="logoutBtn" class="btn-outline-nav"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </li>
+                </ul>
+            </nav>
+            <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </header>
+
+    <section class="single-article" id="articleSection">
+        <div class="container" id="articleContainer">
+            <div style="text-align:center; padding:40px 0;">
+                <i class="fas fa-spinner fa-spin" style="font-size:2rem; color:#f97316;"></i>
+                <p style="color:#94a3b8; margin-top:12px;">Loading article...</p>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="index.html" class="brand">
+                        <i class="fas fa-trophy brand-icon"></i>
+                        <span>Sports<span class="brand-highlight">Arena</span></span>
+                    </a>
+                    <p>Your premier destination for sports news, analysis, and stories that inspire.</p>
+                    <div class="social-links">
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="index.html#categories">Categories</a></li>
+                        <li><a href="index.html#latest">Latest</a></li>
+                        <li><a href="dashboard.html">Dashboard</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Categories</h4>
+                    <ul id="footerCategories"></ul>
+                </div>
+                <div class="footer-contact">
+                    <h4>Contact</h4>
+                    <ul>
+                        <li><i class="fas fa-envelope"></i> hello@sportsarena.com</li>
+                        <li><i class="fas fa-phone"></i> +1 (555) 000-9999</li>
+                        <li><i class="fas fa-map-marker-alt"></i> 123 Arena Blvd, NYC</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Sports Arena. All rights reserved. Built with <i class="fas fa-heart" style="color:#e53e3e;"></i> by the Arena Team.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        // ---------- HAMBURGER ----------
+        document.getElementById('hamburger').addEventListener('click', function() {
+            document.querySelector('.nav-links').classList.toggle('open');
+        });
+
+        // ---------- LOAD ARTICLE ----------
+        async function loadArticle() {
+            const params = new URLSearchParams(window.location.search);
+            const slug = params.get('slug');
+
+            if (!slug) {
+                document.getElementById('articleContainer').innerHTML = `
+                    <div style="text-align:center; padding:40px 0;">
+                        <i class="fas fa-exclamation-circle" style="font-size:2rem; color:#dc2626;"></i>
+                        <h2 style="margin:16px 0;">Article not found</h2>
+                        <a href="index.html" class="btn-primary" style="text-decoration:none; display:inline-block;">← Back to Home</a>
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                const article = await getArticleBySlug(slug);
+                if (!article) {
+                    document.getElementById('articleContainer').innerHTML = `
+                        <div style="text-align:center; padding:40px 0;">
+                            <i class="fas fa-exclamation-circle" style="font-size:2rem; color:#dc2626;"></i>
+                            <h2 style="margin:16px 0;">Article not found</h2>
+                            <a href="index.html" class="btn-primary" style="text-decoration:none; display:inline-block;">← Back to Home</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const url = window.location.href;
+                const title = encodeURIComponent(article.title);
+                const shareUrl = encodeURIComponent(url);
+
+                const html = `
+                    <span class="article-category-badge">${article.category}</span>
+                    <h1>${article.title}</h1>
+                    <div class="article-meta">
+                        <span><i class="fas fa-user-edit"></i> ${article.author}</span>
+                        <span><i class="far fa-calendar-alt"></i> ${article.date}</span>
+                    </div>
+                    ${article.image ? `<img src="${article.image}" alt="${article.title}" class="article-image">` : ''}
+                    <div class="article-summary">${article.summary}</div>
+                    
+                    <div class="share-section">
+                        <span style="font-weight:600; color:#1e293b;"><i class="fas fa-share-alt"></i> Share this article:</span>
+                        <div class="share-buttons">
+                            <a href="https://twitter.com/intent/tweet?text=${title}&url=${shareUrl}" target="_blank" rel="noopener" class="twitter"><i class="fab fa-twitter"></i></a>
+                            <a href="https://www.facebook.com/sharer/sharer.php?u=${shareUrl}" target="_blank" rel="noopener" class="facebook"><i class="fab fa-facebook-f"></i></a>
+                            <a href="https://api.whatsapp.com/send?text=${title}%20${shareUrl}" target="_blank" rel="noopener" class="whatsapp"><i class="fab fa-whatsapp"></i></a>
+                            <button onclick="copyLink('${shareUrl}')" class="copy"><i class="fas fa-link"></i></button>
+                        </div>
+                    </div>
+
+                    <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to all articles</a>
+                `;
+
+                document.getElementById('articleContainer').innerHTML = html;
+
+            } catch (error) {
+                document.getElementById('articleContainer').innerHTML = `
+                    <div style="text-align:center; padding:40px 0;">
+                        <i class="fas fa-exclamation-triangle" style="font-size:2rem; color:#dc2626;"></i>
+                        <h2 style="margin:16px 0;">Error loading article</h2>
+                        <p style="color:#64748b;">${error.message}</p>
+                        <a href="index.html" class="btn-primary" style="text-decoration:none; display:inline-block;">← Back to Home</a>
+                    </div>
+                `;
+            }
+        }
+
+        // Copy link function (for the single article page)
+        window.copyLink = function(url) {
+            const realUrl = decodeURIComponent(url);
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(realUrl).then(() => {
+                    alert('✅ Link copied to clipboard!');
+                }).catch(() => {
+                    fallbackCopy(realUrl);
+                });
+            } else {
+                fallbackCopy(realUrl);
+            }
+        };
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                alert('✅ Link copied to clipboard!');
+            } catch (err) {
+                alert('❌ Failed to copy. Please copy the URL manually.');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        document.addEventListener('DOMContentLoaded', loadArticle);
+    </script>
+</body>
+      </html>

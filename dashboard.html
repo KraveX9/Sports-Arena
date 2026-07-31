@@ -42,7 +42,7 @@
             <div class="stat-card"><div class="num">0</div><div class="label">Pending Reviews</div></div>
         </div>
 
-        <!-- ===== ARTICLE FORM (with Date Picker) ===== -->
+        <!-- ===== ARTICLE FORM (with Full Content) ===== -->
         <div style="background: #fff; border-radius: 24px; padding: 32px; margin-bottom: 40px; border: 1px solid #e9edf2; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
             <h3 id="formTitle" style="margin-bottom: 16px;"><i class="fas fa-plus-circle" style="color: #f97316;"></i> Create New Article</h3>
             <form id="articleForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -52,15 +52,30 @@
                     <option value="">Select a category...</option>
                 </select>
 
-                <!-- 🔥 NEW: Date Picker -->
+                <!-- Date Picker -->
                 <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 4px;">
                     <label style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Publish Date</label>
                     <input type="date" id="articleDate" style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem;">
                     <small style="color:#64748b;">Leave blank to use today's date.</small>
                 </div>
 
+                <!-- 🔥 NEW: Full Content (the actual article) -->
+                <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 4px;">
+                    <label style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Full Article Content</label>
+                    <textarea id="articleContent" placeholder="Write your full article here..." rows="10" style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; font-family: inherit; resize: vertical;"></textarea>
+                    <small style="color:#64748b;">This will be displayed on the full article page.</small>
+                </div>
+
+                <!-- Summary (Excerpt) -->
+                <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 4px;">
+                    <label style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Short Summary (Excerpt)</label>
+                    <textarea id="articleSummary" placeholder="Short summary for the homepage preview (max 150 chars)" rows="2" style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; font-family: inherit; resize: vertical;"></textarea>
+                    <small style="color:#64748b;">This will appear on the homepage and in search results. Max 150 characters.</small>
+                </div>
+
+                <!-- Image Upload -->
                 <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px;">
-                    <label style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Upload Image</label>
+                    <label style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Featured Image</label>
                     <input type="file" id="articleImageFile" accept="image/*" style="padding: 8px; border: 1.5px dashed #e2e8f0; border-radius: 12px; background: #f8fafc;">
                     <div id="imagePreviewContainer" style="display: none; margin-top: 8px;">
                         <img id="imagePreview" src="#" alt="Preview" style="max-width: 150px; max-height: 150px; border-radius: 12px; border: 1px solid #e2e8f0;">
@@ -73,8 +88,6 @@
 
                 <input type="hidden" id="articleImageUrl" value="">
 
-                <textarea id="articleSummary" placeholder="Short summary (max 150 chars)" rows="3" style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; grid-column: 1 / -1;"></textarea>
-                
                 <button type="submit" id="submitBtn" class="btn-primary" style="grid-column: 1 / -1; justify-content: center; padding: 14px; border-radius: 60px; border: none; cursor: pointer;">
                     <i class="fas fa-cloud-upload-alt"></i> Publish Article
                 </button>
@@ -117,7 +130,6 @@
         let currentImageFile = null;
         let allCategories = [];
 
-        // ---------- CATEGORIES ----------
         async function refreshCategories() {
             allCategories = await getCategories();
             populateCategoryDropdown(allCategories);
@@ -137,7 +149,6 @@
             });
         }
 
-        // ---------- HELPERS ----------
         function getTodayDate() {
             return new Date().toISOString().split('T')[0];
         }
@@ -154,11 +165,9 @@
             editingId = null;
             document.getElementById('formMessage').innerHTML = '';
             document.getElementById('articleCategory').value = '';
-            // Set date picker to today
             document.getElementById('articleDate').value = getTodayDate();
         }
 
-        // ---------- EDIT ARTICLE ----------
         window.editArticle = function(id) {
             getArticles().then(articles => {
                 const article = articles.find(a => a.id === id);
@@ -169,9 +178,9 @@
                 document.getElementById('articleTitle').value = article.title || '';
                 document.getElementById('articleAuthor').value = article.author || '';
                 document.getElementById('articleSummary').value = article.summary || '';
+                document.getElementById('articleContent').value = article.content || article.summary || '';
                 populateCategoryDropdown(allCategories, article.category);
 
-                // 🔥 Set the date picker to the article's date
                 if (article.date) {
                     document.getElementById('articleDate').value = article.date;
                 } else {
@@ -199,7 +208,6 @@
             });
         };
 
-        // ---------- IMAGE UPLOAD ----------
         document.getElementById('articleImageFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -234,7 +242,6 @@
             resetForm();
         });
 
-        // ---------- RENDER TABLE ----------
         async function renderAdminTable() {
             const tbody = document.getElementById('adminArticleList');
             if (!tbody) return;
@@ -276,21 +283,16 @@
             }
         };
 
-        // ---------- SUBMIT FORM (with Date) ----------
         document.getElementById('articleForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-            
+
             const title = document.getElementById('articleTitle').value.trim();
             const author = document.getElementById('articleAuthor').value.trim();
             const category = document.getElementById('articleCategory').value.trim();
             const summary = document.getElementById('articleSummary').value.trim() || 'No summary provided.';
+            const content = document.getElementById('articleContent').value.trim() || summary;
             let imageUrl = document.getElementById('articleImageUrl').value;
-            
-            // 🔥 Get the selected date – if empty, use today
-            let selectedDate = document.getElementById('articleDate').value;
-            if (!selectedDate) {
-                selectedDate = getTodayDate();
-            }
+            let selectedDate = document.getElementById('articleDate').value || getTodayDate();
 
             const msgDiv = document.getElementById('formMessage');
 
@@ -319,20 +321,24 @@
 
                 let result;
                 if (editingId) {
-                    // 🔥 Pass the selected date to updateArticle
-                    result = await updateArticle(editingId, { 
-                        title, author, category, 
-                        image: imageUrl, 
+                    result = await updateArticle(editingId, {
+                        title,
+                        author,
+                        category,
+                        image: imageUrl,
                         summary,
-                        date: selectedDate 
+                        content,
+                        date: selectedDate
                     });
                 } else {
-                    // 🔥 Pass the selected date to addArticle
-                    result = await addArticle({ 
-                        title, author, category, 
-                        image: imageUrl, 
+                    result = await addArticle({
+                        title,
+                        author,
+                        category,
+                        image: imageUrl,
                         summary,
-                        date: selectedDate 
+                        content,
+                        date: selectedDate
                     });
                 }
 
@@ -356,16 +362,4 @@
         document.getElementById('dashboardLogout').addEventListener('click', function(e) {
             e.preventDefault();
             adminLogout();
-        });
-
-        // ---------- INIT ----------
-        async function initDashboard() {
-            await refreshCategories();
-            await renderAdminTable();
-            // Set default date to today
-            document.getElementById('articleDate').value = getTodayDate();
-        }
-        document.addEventListener('DOMContentLoaded', initDashboard);
-    </script>
-</body>
-    </html>
+        

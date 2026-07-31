@@ -64,9 +64,10 @@
                 </div>
                 <div style="grid-column:1/-1; display:flex; flex-direction:column; gap:4px;">
                     <label style="font-weight:600; font-size:0.9rem; color:#1e293b;">Full Article Content</label>
-                    <!-- 🔥 Larger textarea -->
                     <textarea id="articleContent" placeholder="Write your full article here..." rows="15" style="padding:12px 16px; border-radius:12px; border:1.5px solid #e2e8f0; font-family:inherit; resize:vertical; min-height:300px;"></textarea>
                     <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                        <!-- 🔥 Hidden file input for insert image -->
+                        <input type="file" id="insertImageInput" accept="image/*" style="display:none;">
                         <button type="button" id="addImageBtn" style="padding:8px 16px; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:40px; cursor:pointer; font-size:0.9rem;">
                             <i class="fas fa-image"></i> Insert Image
                         </button>
@@ -172,43 +173,44 @@
             }).catch(err => alert('Error loading article: ' + err.message));
         };
 
-        // 🔥 Insert image at cursor position
+        // 🔥 INSERT IMAGE – using hidden input
+        const insertInput = document.getElementById('insertImageInput');
         document.getElementById('addImageBtn').addEventListener('click', function() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = 'image/*';
-            input.onchange = async function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-                if (file.size > 5*1024*1024) {
-                    alert('Image too large. Max 5MB.');
-                    return;
-                }
-                const msgDiv = document.getElementById('formMessage');
-                msgDiv.innerHTML = '<span style="color:#f97316;">⏳ Uploading image...</span>';
-                try {
-                    const url = await uploadImage(file);
-                    if (url) {
-                        const textarea = document.getElementById('articleContent');
-                        const start = textarea.selectionStart;
-                        const end = textarea.selectionEnd;
-                        const imgTag = `<img src="${url}" alt="Image" style="max-width:100%; margin:16px 0;">`;
-                        const text = textarea.value;
-                        textarea.value = text.substring(0, start) + imgTag + text.substring(end);
-                        // Move cursor after inserted text
-                        textarea.selectionStart = textarea.selectionEnd = start + imgTag.length;
-                        textarea.focus();
-                        msgDiv.innerHTML = '<span style="color:#16a34a;">✅ Image inserted!</span>';
-                        setTimeout(() => msgDiv.innerHTML = '', 3000);
-                    }
-                } catch(err) {
-                    msgDiv.innerHTML = `<span style="color:#dc2626;">❌ Upload failed: ${err.message}</span>`;
-                }
-            };
-            input.click();
+            insertInput.click();
         });
 
-        // Image preview for featured image
+        insertInput.addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 5*1024*1024) {
+                alert('Image too large. Max 5MB.');
+                this.value = '';
+                return;
+            }
+            const msgDiv = document.getElementById('formMessage');
+            msgDiv.innerHTML = '<span style="color:#f97316;">⏳ Uploading image...</span>';
+            try {
+                const url = await uploadImage(file);
+                if (url) {
+                    const textarea = document.getElementById('articleContent');
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const imgTag = `<img src="${url}" alt="Image" style="max-width:100%; margin:16px 0;">`;
+                    const text = textarea.value;
+                    textarea.value = text.substring(0, start) + imgTag + text.substring(end);
+                    textarea.selectionStart = textarea.selectionEnd = start + imgTag.length;
+                    textarea.focus();
+                    msgDiv.innerHTML = '<span style="color:#16a34a;">✅ Image inserted!</span>';
+                    setTimeout(() => msgDiv.innerHTML = '', 3000);
+                }
+            } catch(err) {
+                msgDiv.innerHTML = `<span style="color:#dc2626;">❌ Upload failed: ${err.message}</span>`;
+                console.error('Insert image error:', err);
+            }
+            this.value = ''; // reset so same file can be re-selected
+        });
+
+        // Featured image preview
         document.getElementById('articleImageFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -260,7 +262,9 @@
                 }
                 document.getElementById('totalArticles').textContent = articles.length;
             } catch(e) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:40px; color:#ef4444;">❌ Error: ${e.message}</td></tr>`;
+                console.error('renderAdminTable error:', e);
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:40px; color:#ef4444;">❌ Error loading articles: ${e.message}</td></tr>`;
+                document.getElementById('totalArticles').textContent = '?';
             }
         }
 
@@ -314,9 +318,4 @@
                     msgDiv.innerHTML = `<span style="color:#16a34a;">✅ Article ${editingId ? 'updated' : 'published'}!</span>`;
                     resetForm();
                     await renderAdminTable();
-                    if (window.loadAndRender) window.loadAndRender();
-                    setTimeout(() => msgDiv.innerHTML = '', 4000);
-                } else {
-                    msgDiv.innerHTML = `<span style="color:#dc2626;">❌ Failed: ${result.error}</span>`;
-                }
-            } catc
+                    if (window.loadAndRender) window.loadAnd

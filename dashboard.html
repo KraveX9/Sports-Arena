@@ -8,9 +8,10 @@
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
-    <!-- 🔥 FIREBASE SDK -->
+    <!-- 🔥 FIREBASE SDK (including Storage) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 </head>
 <body>
 
@@ -51,8 +52,25 @@
                 <input type="text" id="articleTitle" placeholder="Article Title" required style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; grid-column: 1 / -1;">
                 <input type="text" id="articleAuthor" placeholder="Author Name" required style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem;">
                 <input type="text" id="articleCategory" placeholder="Category (e.g. Football)" required style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem;">
-                <input type="text" id="articleImage" placeholder="Image URL (optional)" style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; grid-column: 1 / -1;">
+                
+                <!-- 🔥 NEW: Image Upload Section -->
+                <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px;">
+                    <label style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Upload Image</label>
+                    <input type="file" id="articleImageFile" accept="image/*" style="padding: 8px; border: 1.5px dashed #e2e8f0; border-radius: 12px; background: #f8fafc;">
+                    <div id="imagePreviewContainer" style="display: none; margin-top: 8px;">
+                        <img id="imagePreview" src="#" alt="Preview" style="max-width: 150px; max-height: 150px; border-radius: 12px; border: 1px solid #e2e8f0;">
+                        <button type="button" id="removeImageBtn" style="display:block; margin-top:4px; background:none; border:none; color:#ef4444; cursor:pointer; font-size:0.8rem;">
+                            <i class="fas fa-times-circle"></i> Remove Image
+                        </button>
+                    </div>
+                    <small style="color:#64748b;">Upload a JPG or PNG image. Max size ~5MB.</small>
+                </div>
+
+                <!-- Hidden field to store the image URL (we'll update it via JS) -->
+                <input type="hidden" id="articleImageUrl" value="">
+
                 <textarea id="articleSummary" placeholder="Short summary (max 150 chars)" rows="3" style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; grid-column: 1 / -1;"></textarea>
+                
                 <button type="submit" id="submitBtn" class="btn-primary" style="grid-column: 1 / -1; justify-content: center; padding: 14px; border-radius: 60px; border: none; cursor: pointer;">
                     <i class="fas fa-cloud-upload-alt"></i> Publish Article
                 </button>
@@ -94,10 +112,15 @@
 
         // Global variable to track which article we're editing
         let editingId = null;
+        let currentImageFile = null; // Store the selected file
 
         // Helper to reset form to "Create" mode
         function resetForm() {
             document.getElementById('articleForm').reset();
+            document.getElementById('articleImageUrl').value = '';
+            document.getElementById('imagePreviewContainer').style.display = 'none';
+            document.getElementById('imagePreview').src = '#';
+            currentImageFile = null;
             document.getElementById('submitBtn').innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Publish Article';
             document.getElementById('formTitle').innerHTML = '<i class="fas fa-plus-circle" style="color: #f97316;"></i> Create New Article';
             document.getElementById('cancelEditBtn').style.display = 'none';
@@ -116,8 +139,18 @@
                 document.getElementById('articleTitle').value = article.title || '';
                 document.getElementById('articleAuthor').value = article.author || '';
                 document.getElementById('articleCategory').value = article.category || '';
-                document.getElementById('articleImage').value = article.image || '';
                 document.getElementById('articleSummary').value = article.summary || '';
+
+                // Handle image preview for existing image
+                if (article.image) {
+                    document.getElementById('articleImageUrl').value = article.image;
+                    document.getElementById('imagePreview').src = article.image;
+                    document.getElementById('imagePreviewContainer').style.display = 'block';
+                    currentImageFile = null; // No new file selected
+                } else {
+                    document.getElementById('imagePreviewContainer').style.display = 'none';
+                    document.getElementById('articleImageUrl').value = '';
+                }
 
                 document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Update Article';
                 document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit" style="color: #f97316;"></i> Edit Article';
@@ -130,6 +163,34 @@
                 alert('Error loading article data: ' + err.message);
             });
         };
+
+        // Image preview logic
+        document.getElementById('articleImageFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                currentImageFile = file;
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    document.getElementById('imagePreview').src = event.target.result;
+                    document.getElementById('imagePreviewContainer').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+                // Clear the hidden URL since we have a new file
+                document.getElementById('articleImageUrl').value = '';
+            } else {
+                currentImageFile = null;
+                document.getElementById('imagePreviewContainer').style.display = 'none';
+            }
+        });
+
+        // Remove image button
+        document.getElementById('removeImageBtn').addEventListener('click', function() {
+            document.getElementById('articleImageFile').value = '';
+            document.getElementById('imagePreviewContainer').style.display = 'none';
+            document.getElementById('imagePreview').src = '#';
+            document.getElementById('articleImageUrl').value = '';
+            currentImageFile = null;
+        });
 
         // Cancel edit
         document.getElementById('cancelEditBtn').addEventListener('click', function() {
@@ -188,8 +249,10 @@
             const title = document.getElementById('articleTitle').value.trim();
             const author = document.getElementById('articleAuthor').value.trim();
             const category = document.getElementById('articleCategory').value.trim();
-            const image = document.getElementById('articleImage').value.trim() || 'https://picsum.photos/seed/sports/600/400';
             const summary = document.getElementById('articleSummary').value.trim() || 'No summary provided.';
+            
+            // Get current image URL (could be existing one, or we'll upload new one)
+            let imageUrl = document.getElementById('articleImageUrl').value;
 
             const msgDiv = document.getElementById('formMessage');
 
@@ -202,21 +265,48 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
-            let result;
-            if (editingId) {
-                result = await updateArticle(editingId, { title, author, category, image, summary });
-            } else {
-                result = await addArticle({ title, author, category, image, summary });
-            }
+            try {
+                // 🔥 Step 1: Upload image if a new file is selected
+                if (currentImageFile) {
+                    msgDiv.innerHTML = '<span style="color:#f97316;">⏳ Uploading image...</span>';
+                    try {
+                        const uploadedUrl = await uploadImage(currentImageFile);
+                        if (uploadedUrl) {
+                            imageUrl = uploadedUrl;
+                            document.getElementById('articleImageUrl').value = uploadedUrl;
+                        }
+                    } catch (uploadError) {
+                        msgDiv.innerHTML = `<span style="color:#dc2626;">❌ Image upload failed: ${uploadError.message}</span>`;
+                        btn.disabled = false;
+                        btn.innerHTML = editingId ? '<i class="fas fa-save"></i> Update Article' : '<i class="fas fa-cloud-upload-alt"></i> Publish Article';
+                        return;
+                    }
+                }
 
-            if (result.success) {
-                msgDiv.innerHTML = `<span style="color:#16a34a;">✅ Article ${editingId ? 'updated' : 'published'} successfully!</span>`;
-                resetForm();
-                await renderAdminTable();
-                if (window.loadAndRender) window.loadAndRender();
-                setTimeout(() => msgDiv.innerHTML = '', 4000);
-            } else {
-                msgDiv.innerHTML = `<span style="color:#dc2626;">❌ Failed to save: ${result.error}</span>`;
+                // If no image URL and no file, use placeholder
+                if (!imageUrl) {
+                    imageUrl = 'https://picsum.photos/seed/sports/600/400';
+                }
+
+                // Step 2: Save/Update article in Firestore
+                let result;
+                if (editingId) {
+                    result = await updateArticle(editingId, { title, author, category, image: imageUrl, summary });
+                } else {
+                    result = await addArticle({ title, author, category, image: imageUrl, summary });
+                }
+
+                if (result.success) {
+                    msgDiv.innerHTML = `<span style="color:#16a34a;">✅ Article ${editingId ? 'updated' : 'published'} successfully!</span>`;
+                    resetForm();
+                    await renderAdminTable();
+                    if (window.loadAndRender) window.loadAndRender();
+                    setTimeout(() => msgDiv.innerHTML = '', 4000);
+                } else {
+                    msgDiv.innerHTML = `<span style="color:#dc2626;">❌ Failed to save: ${result.error}</span>`;
+                }
+            } catch (error) {
+                msgDiv.innerHTML = `<span style="color:#dc2626;">❌ An unexpected error occurred: ${error.message}</span>`;
             }
 
             btn.disabled = false;
@@ -233,4 +323,4 @@
         document.addEventListener('DOMContentLoaded', renderAdminTable);
     </script>
 </body>
-    </html>
+</html>

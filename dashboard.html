@@ -7,8 +7,6 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
-    <!-- 🔥 FIREBASE SDK (Only Firestore – Storage is NOT needed anymore) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
@@ -37,14 +35,12 @@
     </div>
 
     <div class="container" style="padding: 40px 0;">
-
         <div class="dashboard-stats">
             <div class="stat-card"><div class="num" id="totalArticles">0</div><div class="label">Total Articles</div></div>
             <div class="stat-card"><div class="num" id="totalCategories">0</div><div class="label">Categories</div></div>
             <div class="stat-card"><div class="num">0</div><div class="label">Pending Reviews</div></div>
         </div>
 
-        <!-- CREATE / EDIT ARTICLE FORM -->
         <div style="background: #fff; border-radius: 24px; padding: 32px; margin-bottom: 40px; border: 1px solid #e9edf2; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
             <h3 id="formTitle" style="margin-bottom: 16px;"><i class="fas fa-plus-circle" style="color: #f97316;"></i> Create New Article</h3>
             <form id="articleForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -52,7 +48,6 @@
                 <input type="text" id="articleAuthor" placeholder="Author Name" required style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem;">
                 <input type="text" id="articleCategory" placeholder="Category (e.g. Football)" required style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem;">
                 
-                <!-- IMAGE UPLOAD SECTION -->
                 <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px;">
                     <label style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Upload Image</label>
                     <input type="file" id="articleImageFile" accept="image/*" style="padding: 8px; border: 1.5px dashed #e2e8f0; border-radius: 12px; background: #f8fafc;">
@@ -79,7 +74,6 @@
             <div id="formMessage" style="margin-top: 12px; font-weight: 500;"></div>
         </div>
 
-        <!-- MANAGE ARTICLES -->
         <div style="background: #fff; border-radius: 24px; padding: 32px; border: 1px solid #e9edf2;">
             <h3 style="margin-bottom: 20px;"><i class="fas fa-list-ul" style="color: #f97316;"></i> Manage Articles</h3>
             <div style="overflow-x: auto;">
@@ -103,7 +97,6 @@
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
     <script>
-        // Redirect if not admin
         if (!isAdmin()) {
             window.location.href = 'login.html';
         }
@@ -151,7 +144,6 @@
                 document.getElementById('cancelEditBtn').style.display = 'inline-block';
                 document.getElementById('formMessage').innerHTML = '';
                 editingId = id;
-
                 document.querySelector('.dashboard-hero').scrollIntoView({ behavior: 'smooth' });
             }).catch(err => {
                 alert('Error loading article data: ' + err.message);

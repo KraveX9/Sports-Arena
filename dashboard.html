@@ -44,20 +44,23 @@
             <div class="stat-card"><div class="num">0</div><div class="label">Pending Reviews</div></div>
         </div>
 
-        <!-- CREATE ARTICLE FORM -->
+        <!-- CREATE / EDIT ARTICLE FORM -->
         <div style="background: #fff; border-radius: 24px; padding: 32px; margin-bottom: 40px; border: 1px solid #e9edf2; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
-            <h3 style="margin-bottom: 16px;"><i class="fas fa-plus-circle" style="color: #f97316;"></i> Create New Article</h3>
-            <form id="createArticleForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <h3 id="formTitle" style="margin-bottom: 16px;"><i class="fas fa-plus-circle" style="color: #f97316;"></i> Create New Article</h3>
+            <form id="articleForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                 <input type="text" id="articleTitle" placeholder="Article Title" required style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; grid-column: 1 / -1;">
                 <input type="text" id="articleAuthor" placeholder="Author Name" required style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem;">
                 <input type="text" id="articleCategory" placeholder="Category (e.g. Football)" required style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem;">
                 <input type="text" id="articleImage" placeholder="Image URL (optional)" style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; grid-column: 1 / -1;">
                 <textarea id="articleSummary" placeholder="Short summary (max 150 chars)" rows="3" style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; grid-column: 1 / -1;"></textarea>
-                <button type="submit" class="btn-primary" style="grid-column: 1 / -1; justify-content: center; padding: 14px; border-radius: 60px; border: none; cursor: pointer;">
+                <button type="submit" id="submitBtn" class="btn-primary" style="grid-column: 1 / -1; justify-content: center; padding: 14px; border-radius: 60px; border: none; cursor: pointer;">
                     <i class="fas fa-cloud-upload-alt"></i> Publish Article
                 </button>
+                <button type="button" id="cancelEditBtn" style="grid-column: 1 / -1; background:none; border:none; color:#64748b; cursor:pointer; display:none; text-decoration:underline;">
+                    Cancel Editing
+                </button>
             </form>
-            <div id="publishMessage" style="margin-top: 12px; font-weight: 500;"></div>
+            <div id="formMessage" style="margin-top: 12px; font-weight: 500;"></div>
         </div>
 
         <!-- MANAGE ARTICLES -->
@@ -88,6 +91,50 @@
         if (!isAdmin()) {
             window.location.href = 'login.html';
         }
+
+        // Global variable to track which article we're editing
+        let editingId = null;
+
+        // Helper to reset form to "Create" mode
+        function resetForm() {
+            document.getElementById('articleForm').reset();
+            document.getElementById('submitBtn').innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Publish Article';
+            document.getElementById('formTitle').innerHTML = '<i class="fas fa-plus-circle" style="color: #f97316;"></i> Create New Article';
+            document.getElementById('cancelEditBtn').style.display = 'none';
+            editingId = null;
+            document.getElementById('formMessage').innerHTML = '';
+        }
+
+        // Load article data into form for editing
+        window.editArticle = function(id) {
+            getArticles().then(articles => {
+                const article = articles.find(a => a.id === id);
+                if (!article) {
+                    alert('Article not found.');
+                    return;
+                }
+                document.getElementById('articleTitle').value = article.title || '';
+                document.getElementById('articleAuthor').value = article.author || '';
+                document.getElementById('articleCategory').value = article.category || '';
+                document.getElementById('articleImage').value = article.image || '';
+                document.getElementById('articleSummary').value = article.summary || '';
+
+                document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Update Article';
+                document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit" style="color: #f97316;"></i> Edit Article';
+                document.getElementById('cancelEditBtn').style.display = 'inline-block';
+                document.getElementById('formMessage').innerHTML = '';
+                editingId = id;
+
+                document.querySelector('.dashboard-hero').scrollIntoView({ behavior: 'smooth' });
+            }).catch(err => {
+                alert('Error loading article data: ' + err.message);
+            });
+        };
+
+        // Cancel edit
+        document.getElementById('cancelEditBtn').addEventListener('click', function() {
+            resetForm();
+        });
 
         // Render admin table
         async function renderAdminTable() {
@@ -125,6 +172,7 @@
                 const result = await deleteArticleById(id);
                 if (result.success) {
                     alert('🗑️ Article deleted!');
+                    if (editingId === id) resetForm();
                     await renderAdminTable();
                     if (window.loadAndRender) window.loadAndRender();
                 } else {
@@ -133,44 +181,46 @@
             }
         };
 
-        window.editArticle = function(id) {
-            alert(`✏️ Edit feature coming soon.`);
-        };
-
-        // Create article
-        document.getElementById('createArticleForm').addEventListener('submit', async function(e) {
+        // Handle form submit (Create or Update)
+        document.getElementById('articleForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            
             const title = document.getElementById('articleTitle').value.trim();
             const author = document.getElementById('articleAuthor').value.trim();
             const category = document.getElementById('articleCategory').value.trim();
             const image = document.getElementById('articleImage').value.trim() || 'https://picsum.photos/seed/sports/600/400';
             const summary = document.getElementById('articleSummary').value.trim() || 'No summary provided.';
 
-            const msgDiv = document.getElementById('publishMessage');
+            const msgDiv = document.getElementById('formMessage');
 
             if (!title || !author || !category) {
                 msgDiv.innerHTML = '<span style="color:#dc2626;">❌ Please fill in Title, Author, and Category.</span>';
                 return;
             }
 
-            const btn = this.querySelector('button[type="submit"]');
+            const btn = document.getElementById('submitBtn');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Publishing...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
-            const result = await addArticle({ title, author, category, image, summary });
+            let result;
+            if (editingId) {
+                result = await updateArticle(editingId, { title, author, category, image, summary });
+            } else {
+                result = await addArticle({ title, author, category, image, summary });
+            }
 
             if (result.success) {
-                msgDiv.innerHTML = '<span style="color:#16a34a;">✅ Article published successfully to Firestore!</span>';
-                this.reset();
+                msgDiv.innerHTML = `<span style="color:#16a34a;">✅ Article ${editingId ? 'updated' : 'published'} successfully!</span>`;
+                resetForm();
                 await renderAdminTable();
                 if (window.loadAndRender) window.loadAndRender();
                 setTimeout(() => msgDiv.innerHTML = '', 4000);
             } else {
-                msgDiv.innerHTML = `<span style="color:#dc2626;">❌ Failed to publish: ${result.error}</span>`;
+                msgDiv.innerHTML = `<span style="color:#dc2626;">❌ Failed to save: ${result.error}</span>`;
             }
 
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Publish Article';
+            btn.innerHTML = editingId ? '<i class="fas fa-save"></i> Update Article' : '<i class="fas fa-cloud-upload-alt"></i> Publish Article';
         });
 
         // Logout
@@ -183,4 +233,4 @@
         document.addEventListener('DOMContentLoaded', renderAdminTable);
     </script>
 </body>
-</html>
+    </html>

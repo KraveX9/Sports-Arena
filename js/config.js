@@ -1,5 +1,5 @@
 // ============================================
-//  SPORTS ARENA – FIREBASE FIRESTORE CONFIG
+//  SPORTS ARENA – FIREBASE FIRESTORE + STORAGE
 // ============================================
 
 // ----- YOUR FIREBASE CONFIG -----
@@ -13,8 +13,10 @@ const firebaseConfig = {
   measurementId: "G-JGJ2N4KH0F"
 };
 
+// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const storage = firebase.storage(); // 🔥 NEW: Initialize Storage
 
 // ----- MOCK CATEGORIES -----
 const mockCategories = [
@@ -49,6 +51,34 @@ async function getCategories() {
     return mockCategories;
 }
 
+// 🔥 NEW: Upload image to Firebase Storage
+async function uploadImage(file) {
+    if (!file) return null;
+    
+    // Create a unique filename
+    const timestamp = Date.now();
+    const filename = `articles/${timestamp}_${file.name}`;
+    const uploadTask = storage.ref(filename).put(file);
+
+    return new Promise((resolve, reject) => {
+        uploadTask.on(
+            'state_changed',
+            (snapshot) => {
+                // Optional: track progress here later
+            },
+            (error) => {
+                console.error('Upload error:', error);
+                reject(error);
+            },
+            async () => {
+                // Get the download URL
+                const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
+                resolve(downloadURL);
+            }
+        );
+    });
+}
+
 async function addArticle(article) {
     try {
         const docRef = await db.collection('articles').add({
@@ -67,7 +97,6 @@ async function addArticle(article) {
     }
 }
 
-// 🔥 NEW: UPDATE an existing article
 async function updateArticle(id, article) {
     try {
         await db.collection('articles').doc(id).update({

@@ -1,5 +1,5 @@
 // ============================================
-//  PUBLIC BLOG ENGINE (WITH SEARCH + SOCIAL SHARE)
+//  PUBLIC BLOG ENGINE (WITH SEARCH + SOCIAL SHARE + SLUGS)
 // ============================================
 
 let currentCategory = 'All';
@@ -81,7 +81,6 @@ function applyFilters() {
     renderArticles(filtered);
 }
 
-// 🔥 NEW: Generate share buttons HTML
 function getShareButtons(article) {
     const url = window.location.href;
     const title = encodeURIComponent(article.title);
@@ -106,7 +105,6 @@ function getShareButtons(article) {
     `;
 }
 
-// 🔥 NEW: Copy link function
 window.copyLink = function(url) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(decodeURIComponent(url)).then(() => {
@@ -154,6 +152,8 @@ function renderArticles(filteredArticles) {
 
     let html = '';
     sliced.forEach(a => {
+        // 🔥 Build the article link using the slug
+        const articleLink = a.slug ? `article.html?slug=${a.slug}` : '#';
         html += `
             <div class="article-card">
                 <div class="article-img" style="background-image:url('${a.image || 'https://picsum.photos/seed/default/600/400'}');">
@@ -167,7 +167,7 @@ function renderArticles(filteredArticles) {
                         <span><i class="far fa-calendar-alt"></i> ${a.date}</span>
                     </div>
                     ${getShareButtons(a)}
-                    <a href="#" class="read-more">Read More <i class="fas fa-arrow-right"></i></a>
+                    <a href="${articleLink}" class="read-more">Read More <i class="fas fa-arrow-right"></i></a>
                 </div>
             </div>
         `;
@@ -188,7 +188,6 @@ function updateStats() {
     if (statAuthors) statAuthors.textContent = authors.size;
 }
 
-// Search input listener
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {

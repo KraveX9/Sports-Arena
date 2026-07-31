@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -63,11 +64,14 @@
         .single-article .article-meta i {
             margin-right: 6px;
         }
-        .single-article .article-summary {
-            font-size: 1.15rem;
-            line-height: 1.7;
+        .single-article .article-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
             color: #1e293b;
             white-space: pre-wrap;
+        }
+        .single-article .article-content p {
+            margin-bottom: 1.2rem;
         }
         .single-article .back-link {
             display: inline-block;
@@ -363,7 +367,7 @@
                 const updatedArticle = await getArticleBySlug(slug);
                 const viewCount = updatedArticle?.views || 0;
 
-                // 🔥 Load comments
+                // Load comments
                 const comments = await getComments(slug);
 
                 const url = window.location.href;
@@ -407,6 +411,9 @@
                     </form>
                 </div>`;
 
+                // 🔥 Display the FULL CONTENT (article.content)
+                const articleContent = article.content || article.summary || 'No content available.';
+
                 const html = `
                     <span class="article-category-badge">${article.category}</span>
                     <h1>${article.title}</h1>
@@ -416,7 +423,7 @@
                         <span><i class="fas fa-eye"></i> ${viewCount}</span>
                     </div>
                     ${article.image ? `<img src="${article.image}" alt="${article.title}" class="article-image">` : ''}
-                    <div class="article-summary">${article.summary}</div>
+                    <div class="article-content">${articleContent}</div>
                     
                     <div class="share-section">
                         <span style="font-weight:600; color:#1e293b;"><i class="fas fa-share-alt"></i> Share this article:</span>
@@ -458,7 +465,6 @@
                         const result = await addComment(slug, name, comment, email);
                         if (result.success) {
                             msgDiv.innerHTML = '<span style="color:#16a34a;">✅ Comment posted! Reloading...</span>';
-                            // Reload comments by re-fetching and updating the list
                             const freshComments = await getComments(slug);
                             const list = document.getElementById('commentList');
                             const countDiv = document.querySelector('.comments-count');
@@ -466,4 +472,74 @@
                                 if (freshComments.length === 0) {
                                     list.innerHTML = '<div class="no-comments">No comments yet.</div>';
                                 } else {
-                                    list.innerHTML = freshComments.map(c
+                                    list.innerHTML = freshComments.map(c => {
+                                        const date = c.createdAt ? new Date(c.createdAt.toDate()).toLocaleDateString() : '';
+                                        return `
+                                            <div class="comment-item">
+                                                <div class="comment-header">
+                                                    <span class="comment-name">${c.name}</span>
+                                                    <span class="comment-date">${date}</span>
+                                                </div>
+                                                <p class="comment-text">${c.comment}</p>
+                                            </div>
+                                        `;
+                                    }).join('');
+                                }
+                                if (countDiv) countDiv.textContent = `${freshComments.length} comment${freshComments.length !== 1 ? 's' : ''}`;
+                            }
+                            document.getElementById('commentName').value = '';
+                            document.getElementById('commentEmail').value = '';
+                            document.getElementById('commentText').value = '';
+                            msgDiv.innerHTML = '<span style="color:#16a34a;">✅ Comment posted!</span>';
+                            setTimeout(() => msgDiv.innerHTML = '', 3000);
+                        } else {
+                            msgDiv.innerHTML = `<span style="color:#dc2626;">❌ Failed to post: ${result.error}</span>`;
+                        }
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Post Comment';
+                    });
+                }
+
+            } catch (error) {
+                document.getElementById('articleContainer').innerHTML = `
+                    <div style="text-align:center; padding:40px 0;">
+                        <i class="fas fa-exclamation-triangle" style="font-size:2rem; color:#dc2626;"></i>
+                        <h2 style="margin:16px 0;">Error loading article</h2>
+                        <p style="color:#64748b;">${error.message}</p>
+                        <a href="index.html" class="btn-primary" style="text-decoration:none; display:inline-block;">← Back to Home</a>
+                    </div>
+                `;
+            }
+        }
+
+        window.copyLink = function(url) {
+            const realUrl = decodeURIComponent(url);
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(realUrl).then(() => {
+                    alert('✅ Link copied to clipboard!');
+                }).catch(() => {
+                    fallbackCopy(realUrl);
+                });
+            } else {
+                fallbackCopy(realUrl);
+            }
+        };
+
+        function fallbackCopy(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                alert('✅ Link copied to clipboard!');
+            } catch (err) {
+                alert('❌ Failed to copy. Please copy the URL manually.');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        document.addEventListener('DOMContentLoaded', loadArticle);
+    </script>
+</body>
+</html>

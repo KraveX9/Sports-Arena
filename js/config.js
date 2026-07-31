@@ -20,7 +20,7 @@ const db = firebase.firestore();
 const IMGBB_API_KEY = '17e055fb3d68d047117985b03c255ba3';
 
 // ============================================
-//  CATEGORIES
+//  CATEGORIES (HARDCODED – NO FIRESTORE CALL)
 // ============================================
 const CATEGORIES = [
     'Football',
@@ -113,14 +113,13 @@ async function uploadImage(file) {
     });
 }
 
-// 🔥 UPDATED: Adds `content` field
 async function addArticle(article) {
     try {
         const slug = generateSlug(article.title);
         const docRef = await db.collection('articles').add({
             title: article.title,
             summary: article.summary,
-            content: article.content || article.summary, // Full article content
+            content: article.content || article.summary,
             category: article.category,
             author: article.author,
             image: article.image || 'https://picsum.photos/seed/sports/600/400',
@@ -135,7 +134,6 @@ async function addArticle(article) {
     }
 }
 
-// 🔥 UPDATED: Updates `content` field
 async function updateArticle(id, article) {
     try {
         const slug = generateSlug(article.title);
@@ -195,4 +193,4 @@ async function addComment(slug, name, comment, email = '') {
         console.error('Error adding comment:', error);
         return { success: false, error: error.message };
     }
-  }
+    }

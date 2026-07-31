@@ -1,5 +1,5 @@
 // ============================================
-//  SPORTS ARENA – FIRESTORE + IMGBB + SLUGS + ANALYTICS
+//  SPORTS ARENA – FIRESTORE + IMGBB + SLUGS + ANALYTICS + COMMENTS
 // ============================================
 
 // ----- FIREBASE CONFIG -----
@@ -75,7 +75,6 @@ async function getArticleBySlug(slug) {
     }
 }
 
-// 🔥 NEW: Increment view count
 async function incrementViews(id) {
     try {
         await db.collection('articles').doc(id).update({
@@ -125,7 +124,7 @@ async function addArticle(article) {
             image: article.image || 'https://picsum.photos/seed/sports/600/400',
             date: article.date || new Date().toISOString().split('T')[0],
             slug: slug,
-            views: 0, // 🔥 New articles start with 0 views
+            views: 0,
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         return { success: true, id: docRef.id };
@@ -159,4 +158,39 @@ async function deleteArticleById(id) {
     } catch (error) {
         return { success: false, error: error.message };
     }
-  }
+}
+
+// ============================================
+//  🔥 COMMENT FUNCTIONS (NEW)
+// ============================================
+
+// Fetch comments for a specific article slug
+async function getComments(slug) {
+    try {
+        const snapshot = await db.collection('comments')
+            .where('articleSlug', '==', slug)
+            .orderBy('createdAt', 'asc')
+            .get();
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+        console.error('Error fetching comments:', error);
+        return [];
+    }
+}
+
+// Add a new comment
+async function addComment(slug, name, comment, email = '') {
+    try {
+        await db.collection('comments').add({
+            articleSlug: slug,
+            name: name.trim(),
+            comment: comment.trim(),
+            email: email.trim() || '',
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        return { success: true };
+    } catch (error) {
+        console.error('Error adding comment:', error);
+        return { success: false, error: error.message };
+    }
+}

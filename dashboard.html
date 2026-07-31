@@ -64,11 +64,15 @@
                 </div>
                 <div style="grid-column:1/-1; display:flex; flex-direction:column; gap:4px;">
                     <label style="font-weight:600; font-size:0.9rem; color:#1e293b;">Full Article Content</label>
-                    <textarea id="articleContent" placeholder="Write your full article here..." rows="10" style="padding:12px 16px; border-radius:12px; border:1.5px solid #e2e8f0; font-family:inherit; resize:vertical;"></textarea>
-                    <button type="button" id="addImageBtn" style="align-self:flex-start; padding:8px 16px; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:40px; cursor:pointer; font-size:0.9rem;">
-                        <i class="fas fa-image"></i> Insert Image
-                    </button>
-                    <small style="color:#64748b;">Click "Insert Image" to upload and embed an image in the content.</small>
+                    <!-- 🔥 Larger textarea -->
+                    <textarea id="articleContent" placeholder="Write your full article here..." rows="15" style="padding:12px 16px; border-radius:12px; border:1.5px solid #e2e8f0; font-family:inherit; resize:vertical; min-height:300px;"></textarea>
+                    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
+                        <button type="button" id="addImageBtn" style="padding:8px 16px; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:40px; cursor:pointer; font-size:0.9rem;">
+                            <i class="fas fa-image"></i> Insert Image
+                        </button>
+                        <span style="color:#94a3b8; font-size:0.85rem;">Upload and insert image at cursor position</span>
+                    </div>
+                    <small style="color:#64748b;">Click "Insert Image" to upload and embed an image exactly where your cursor is.</small>
                 </div>
                 <div style="grid-column:1/-1; display:flex; flex-direction:column; gap:4px;">
                     <label style="font-weight:600; font-size:0.9rem; color:#1e293b;">Short Summary (Excerpt)</label>
@@ -168,8 +172,8 @@
             }).catch(err => alert('Error loading article: ' + err.message));
         };
 
-        // Image upload for content (insert image)
-        document.getElementById('addImageBtn').addEventListener('click', async function() {
+        // 🔥 Insert image at cursor position
+        document.getElementById('addImageBtn').addEventListener('click', function() {
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = 'image/*';
@@ -186,8 +190,14 @@
                     const url = await uploadImage(file);
                     if (url) {
                         const textarea = document.getElementById('articleContent');
-                        const imgTag = `\n<img src="${url}" alt="Image" style="max-width:100%; margin: 16px 0;">\n`;
-                        textarea.value += imgTag;
+                        const start = textarea.selectionStart;
+                        const end = textarea.selectionEnd;
+                        const imgTag = `<img src="${url}" alt="Image" style="max-width:100%; margin:16px 0;">`;
+                        const text = textarea.value;
+                        textarea.value = text.substring(0, start) + imgTag + text.substring(end);
+                        // Move cursor after inserted text
+                        textarea.selectionStart = textarea.selectionEnd = start + imgTag.length;
+                        textarea.focus();
                         msgDiv.innerHTML = '<span style="color:#16a34a;">✅ Image inserted!</span>';
                         setTimeout(() => msgDiv.innerHTML = '', 3000);
                     }
@@ -198,7 +208,7 @@
             input.click();
         });
 
-        // Image preview
+        // Image preview for featured image
         document.getElementById('articleImageFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -309,23 +319,4 @@
                 } else {
                     msgDiv.innerHTML = `<span style="color:#dc2626;">❌ Failed: ${result.error}</span>`;
                 }
-            } catch(err) {
-                msgDiv.innerHTML = `<span style="color:#dc2626;">❌ Error: ${err.message}</span>`;
-            }
-            btn.disabled = false;
-            btn.innerHTML = editingId ? '<i class="fas fa-save"></i> Update Article' : '<i class="fas fa-cloud-upload-alt"></i> Publish Article';
-        });
-
-        document.getElementById('dashboardLogout').addEventListener('click', function(e) {
-            e.preventDefault();
-            adminLogout();
-        });
-
-        async function init() {
-            await renderAdminTable();
-            document.getElementById('articleDate').value = getTodayDate();
-        }
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
-</body>
-    </html>
+            } catc

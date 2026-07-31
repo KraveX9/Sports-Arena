@@ -35,18 +35,40 @@
     </div>
 
     <div class="container" style="padding: 40px 0;">
+
+        <!-- Stats -->
         <div class="dashboard-stats">
             <div class="stat-card"><div class="num" id="totalArticles">0</div><div class="label">Total Articles</div></div>
             <div class="stat-card"><div class="num" id="totalCategories">0</div><div class="label">Categories</div></div>
             <div class="stat-card"><div class="num">0</div><div class="label">Pending Reviews</div></div>
         </div>
 
+        <!-- ===== NEW: MANAGE CATEGORIES PANEL ===== -->
+        <div style="background: #fff; border-radius: 24px; padding: 32px; margin-bottom: 40px; border: 1px solid #e9edf2;">
+            <h3 style="margin-bottom: 16px;"><i class="fas fa-tags" style="color: #f97316;"></i> Manage Categories</h3>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
+                <input type="text" id="newCategoryInput" placeholder="New category name" style="flex:1; min-width:200px; padding: 10px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem;">
+                <button id="addCategoryBtn" class="btn-primary" style="padding: 10px 24px; border-radius: 40px; border: none; cursor: pointer;">
+                    <i class="fas fa-plus"></i> Add
+                </button>
+            </div>
+            <div id="categoryList" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                <!-- Categories will be listed here -->
+            </div>
+            <div id="categoryMessage" style="margin-top: 10px; font-weight: 500;"></div>
+        </div>
+
+        <!-- ===== CREATE / EDIT ARTICLE FORM (with Category Dropdown) ===== -->
         <div style="background: #fff; border-radius: 24px; padding: 32px; margin-bottom: 40px; border: 1px solid #e9edf2; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
             <h3 id="formTitle" style="margin-bottom: 16px;"><i class="fas fa-plus-circle" style="color: #f97316;"></i> Create New Article</h3>
             <form id="articleForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                 <input type="text" id="articleTitle" placeholder="Article Title" required style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; grid-column: 1 / -1;">
                 <input type="text" id="articleAuthor" placeholder="Author Name" required style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem;">
-                <input type="text" id="articleCategory" placeholder="Category (e.g. Football)" required style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem;">
+                
+                <!-- 🔥 UPDATED: Category Dropdown instead of text input -->
+                <select id="articleCategory" required style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; background: #fff;">
+                    <option value="">Select a category...</option>
+                </select>
                 
                 <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px;">
                     <label style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Upload Image</label>
@@ -74,6 +96,7 @@
             <div id="formMessage" style="margin-top: 12px; font-weight: 500;"></div>
         </div>
 
+        <!-- MANAGE ARTICLES TABLE -->
         <div style="background: #fff; border-radius: 24px; padding: 32px; border: 1px solid #e9edf2;">
             <h3 style="margin-bottom: 20px;"><i class="fas fa-list-ul" style="color: #f97316;"></i> Manage Articles</h3>
             <div style="overflow-x: auto;">
@@ -97,13 +120,98 @@
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
     <script>
+        // ============================================
+        //  DASHBOARD LOGIC (with Categories Management)
+        // ============================================
+
         if (!isAdmin()) {
             window.location.href = 'login.html';
         }
 
         let editingId = null;
         let currentImageFile = null;
+        let allCategories = [];
 
+        // ---------- CATEGORY HELPERS ----------
+        function renderCategoryList(categories) {
+            const container = document.getElementById('categoryList');
+            if (!container) return;
+            if (categories.length === 0) {
+                container.innerHTML = '<span style="color:#94a3b8;">No categories yet. Add one above!</span>';
+                return;
+            }
+            container.innerHTML = categories.map(cat => `
+                <span style="display:inline-flex; align-items:center; background:#f1f5f9; padding:6px 14px; border-radius:40px; gap:8px; font-size:0.9rem;">
+                    ${cat.name}
+                    <button onclick="deleteCategoryHandler('${cat.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:1rem;">
+                        <i class="fas fa-times-circle"></i>
+                    </button>
+                </span>
+            `).join('');
+        }
+
+        function populateCategoryDropdown(categories, selectedValue = '') {
+            const dropdown = document.getElementById('articleCategory');
+            if (!dropdown) return;
+            const currentVal = dropdown.value;
+            dropdown.innerHTML = '<option value="">Select a category...</option>';
+            categories.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat.name;
+                opt.textContent = cat.name;
+                if (cat.name === selectedValue || cat.name === currentVal) {
+                    opt.selected = true;
+                }
+                dropdown.appendChild(opt);
+            });
+        }
+
+        // Load categories and update UI
+        async function refreshCategories() {
+            try {
+                allCategories = await getCategories();
+                renderCategoryList(allCategories);
+                populateCategoryDropdown(allCategories);
+                document.getElementById('totalCategories').textContent = allCategories.length;
+            } catch (e) {
+                console.error('Failed to refresh categories:', e);
+            }
+        }
+
+        // Add category
+        document.getElementById('addCategoryBtn').addEventListener('click', async function() {
+            const input = document.getElementById('newCategoryInput');
+            const name = input.value.trim();
+            const msgDiv = document.getElementById('categoryMessage');
+            if (!name) {
+                msgDiv.innerHTML = '<span style="color:#dc2626;">❌ Please enter a category name.</span>';
+                return;
+            }
+            msgDiv.innerHTML = '<span style="color:#f97316;">⏳ Adding...</span>';
+            const result = await addCategory(name);
+            if (result.success) {
+                msgDiv.innerHTML = '<span style="color:#16a34a;">✅ Category added!</span>';
+                input.value = '';
+                await refreshCategories();
+                setTimeout(() => msgDiv.innerHTML = '', 3000);
+            } else {
+                msgDiv.innerHTML = `<span style="color:#dc2626;">❌ Failed: ${result.error}</span>`;
+            }
+        });
+
+        // Delete category
+        window.deleteCategoryHandler = async function(id) {
+            if (!confirm('Delete this category permanently? Articles using it will keep the name but it won\'t be in the dropdown.')) return;
+            const result = await deleteCategory(id);
+            if (result.success) {
+                alert('🗑️ Category deleted!');
+                await refreshCategories();
+            } else {
+                alert('❌ Delete failed: ' + result.error);
+            }
+        };
+
+        // ---------- ARTICLE FORM ----------
         function resetForm() {
             document.getElementById('articleForm').reset();
             document.getElementById('articleImageUrl').value = '';
@@ -115,6 +223,9 @@
             document.getElementById('cancelEditBtn').style.display = 'none';
             editingId = null;
             document.getElementById('formMessage').innerHTML = '';
+            // Reset dropdown to first option
+            const dropdown = document.getElementById('articleCategory');
+            if (dropdown) dropdown.value = '';
         }
 
         window.editArticle = function(id) {
@@ -126,8 +237,10 @@
                 }
                 document.getElementById('articleTitle').value = article.title || '';
                 document.getElementById('articleAuthor').value = article.author || '';
-                document.getElementById('articleCategory').value = article.category || '';
                 document.getElementById('articleSummary').value = article.summary || '';
+
+                // Set dropdown to match article category
+                populateCategoryDropdown(allCategories, article.category);
 
                 if (article.image) {
                     document.getElementById('articleImageUrl').value = article.image;
@@ -205,8 +318,7 @@
                     `).join('');
                 }
                 document.getElementById('totalArticles').textContent = articles.length;
-                const cats = await getCategories();
-                document.getElementById('totalCategories').textContent = cats.length;
+                // Categories count is updated via refreshCategories
             } catch (error) {
                 console.error('Render error:', error);
                 tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:40px; color:#ef4444;">❌ Error loading articles: ${error.message}</td></tr>`;
@@ -297,7 +409,12 @@
             adminLogout();
         });
 
-        document.addEventListener('DOMContentLoaded', renderAdminTable);
+        // ---------- INIT ----------
+        async function initDashboard() {
+            await refreshCategories();
+            await renderAdminTable();
+        }
+        document.addEventListener('DOMContentLoaded', initDashboard);
     </script>
 </body>
 </html>

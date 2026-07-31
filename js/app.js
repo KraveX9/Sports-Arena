@@ -1,5 +1,5 @@
 // ============================================
-//  PUBLIC BLOG ENGINE (WITH SEARCH + SOCIAL SHARE + SLUGS)
+//  PUBLIC BLOG ENGINE (WITH SEARCH + SOCIAL SHARE + SLUGS + VIEWS)
 // ============================================
 
 let currentCategory = 'All';
@@ -152,8 +152,9 @@ function renderArticles(filteredArticles) {
 
     let html = '';
     sliced.forEach(a => {
-        // 🔥 Build the article link using the slug
         const articleLink = a.slug ? `article.html?slug=${a.slug}` : '#';
+        // 🔥 Display view count
+        const viewCount = a.views !== undefined ? a.views : 0;
         html += `
             <div class="article-card">
                 <div class="article-img" style="background-image:url('${a.image || 'https://picsum.photos/seed/default/600/400'}');">
@@ -165,6 +166,7 @@ function renderArticles(filteredArticles) {
                     <div class="article-meta">
                         <span class="author"><i class="fas fa-user-edit"></i> ${a.author}</span>
                         <span><i class="far fa-calendar-alt"></i> ${a.date}</span>
+                        <span><i class="fas fa-eye"></i> ${viewCount}</span>
                     </div>
                     ${getShareButtons(a)}
                     <a href="${articleLink}" class="read-more">Read More <i class="fas fa-arrow-right"></i></a>

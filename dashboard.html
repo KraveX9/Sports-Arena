@@ -38,7 +38,7 @@
 
         <div class="dashboard-stats">
             <div class="stat-card"><div class="num" id="totalArticles">0</div><div class="label">Total Articles</div></div>
-            <div class="stat-card"><div class="num" id="totalCategories">0</div><div class="label">Categories</div></div>
+            <div class="stat-card"><div class="num" id="totalCategories">6</div><div class="label">Categories</div></div>
             <div class="stat-card"><div class="num">0</div><div class="label">Pending Reviews</div></div>
         </div>
 
@@ -48,8 +48,7 @@
             <form id="articleForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                 <input type="text" id="articleTitle" placeholder="Article Title" required style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; grid-column: 1 / -1;">
                 <input type="text" id="articleAuthor" placeholder="Author Name" required style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem;">
-                
-                <!-- 🔥 HARDCODED CATEGORIES – Guaranteed to show up -->
+
                 <select id="articleCategory" required style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; background: #fff;">
                     <option value="">Select a category...</option>
                     <option value="Football">Football</option>
@@ -60,28 +59,24 @@
                     <option value="Golf">Golf</option>
                 </select>
 
-                <!-- Date Picker -->
                 <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 4px;">
                     <label style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Publish Date</label>
                     <input type="date" id="articleDate" style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem;">
                     <small style="color:#64748b;">Leave blank to use today's date.</small>
                 </div>
 
-                <!-- Full Content -->
                 <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 4px;">
                     <label style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Full Article Content</label>
                     <textarea id="articleContent" placeholder="Write your full article here..." rows="10" style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; font-family: inherit; resize: vertical;"></textarea>
                     <small style="color:#64748b;">This will be displayed on the full article page.</small>
                 </div>
 
-                <!-- Summary -->
                 <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 4px;">
                     <label style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Short Summary (Excerpt)</label>
                     <textarea id="articleSummary" placeholder="Short summary for the homepage preview (max 150 chars)" rows="2" style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; font-family: inherit; resize: vertical;"></textarea>
                     <small style="color:#64748b;">This will appear on the homepage and in search results.</small>
                 </div>
 
-                <!-- Image Upload -->
                 <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px;">
                     <label style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Featured Image</label>
                     <input type="file" id="articleImageFile" accept="image/*" style="padding: 8px; border: 1.5px dashed #e2e8f0; border-radius: 12px; background: #f8fafc;">
@@ -156,7 +151,6 @@
             document.getElementById('articleDate').value = getTodayDate();
         }
 
-        // ---------- EDIT ARTICLE ----------
         window.editArticle = function(id) {
             getArticles().then(articles => {
                 const article = articles.find(a => a.id === id);
@@ -168,11 +162,7 @@
                 document.getElementById('articleAuthor').value = article.author || '';
                 document.getElementById('articleSummary').value = article.summary || '';
                 document.getElementById('articleContent').value = article.content || article.summary || '';
-                
-                // 🔥 Simply set the dropdown value to the article's category
-                const dropdown = document.getElementById('articleCategory');
-                if (dropdown) dropdown.value = article.category || '';
-
+                document.getElementById('articleCategory').value = article.category || '';
                 if (article.date) {
                     document.getElementById('articleDate').value = article.date;
                 } else {
@@ -200,7 +190,6 @@
             });
         };
 
-        // ---------- IMAGE UPLOAD ----------
         document.getElementById('articleImageFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -235,7 +224,6 @@
             resetForm();
         });
 
-        // ---------- RENDER TABLE ----------
         async function renderAdminTable() {
             const tbody = document.getElementById('adminArticleList');
             if (!tbody) return;
@@ -257,8 +245,6 @@
                     `).join('');
                 }
                 document.getElementById('totalArticles').textContent = articles.length;
-                // Update categories count (just show the static number)
-                document.getElementById('totalCategories').textContent = '6';
             } catch (error) {
                 console.error('Render error:', error);
                 tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:40px; color:#ef4444;">❌ Error loading articles: ${error.message}</td></tr>`;
@@ -279,7 +265,6 @@
             }
         };
 
-        // ---------- SUBMIT FORM ----------
         document.getElementById('articleForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
@@ -357,4 +342,15 @@
         });
 
         document.getElementById('dashboardLogout').addEventListener('click', function(e) {
-            e.preventDefaul
+            e.preventDefault();
+            adminLogout();
+        });
+
+        async function initDashboard() {
+            await renderAdminTable();
+            document.getElementById('articleDate').value = getTodayDate();
+        }
+        document.addEventListener('DOMContentLoaded', initDashboard);
+    </script>
+</body>
+    </html>

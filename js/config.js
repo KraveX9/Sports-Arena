@@ -1,5 +1,5 @@
 // ============================================
-//  SPORTS ARENA – FIRESTORE + IMGBB + SLUGS
+//  SPORTS ARENA – FIRESTORE + IMGBB + SLUGS + ANALYTICS
 // ============================================
 
 // ----- FIREBASE CONFIG -----
@@ -20,7 +20,7 @@ const db = firebase.firestore();
 const IMGBB_API_KEY = '17e055fb3d68d047117985b03c255ba3';
 
 // ============================================
-//  CATEGORIES (HARDCODED)
+//  CATEGORIES
 // ============================================
 const CATEGORIES = [
     'Football',
@@ -41,9 +41,9 @@ async function getCategories() {
 function generateSlug(title) {
     return title
         .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')   // Remove special characters
-        .replace(/\s+/g, '-')           // Replace spaces with hyphens
-        .slice(0, 50);                  // Limit to 50 characters
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .slice(0, 50);
 }
 
 // ============================================
@@ -60,7 +60,6 @@ async function getArticles() {
     }
 }
 
-// 🔥 NEW: Fetch a single article by its slug
 async function getArticleBySlug(slug) {
     try {
         const snapshot = await db.collection('articles')
@@ -73,6 +72,19 @@ async function getArticleBySlug(slug) {
     } catch (error) {
         console.error('Error fetching article by slug:', error);
         return null;
+    }
+}
+
+// 🔥 NEW: Increment view count
+async function incrementViews(id) {
+    try {
+        await db.collection('articles').doc(id).update({
+            views: firebase.firestore.FieldValue.increment(1)
+        });
+        return { success: true };
+    } catch (error) {
+        console.error('Error incrementing views:', error);
+        return { success: false };
     }
 }
 
@@ -102,7 +114,6 @@ async function uploadImage(file) {
     });
 }
 
-// 🔥 UPDATED: Generates slug from title
 async function addArticle(article) {
     try {
         const slug = generateSlug(article.title);
@@ -114,6 +125,7 @@ async function addArticle(article) {
             image: article.image || 'https://picsum.photos/seed/sports/600/400',
             date: article.date || new Date().toISOString().split('T')[0],
             slug: slug,
+            views: 0, // 🔥 New articles start with 0 views
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         return { success: true, id: docRef.id };
@@ -122,7 +134,6 @@ async function addArticle(article) {
     }
 }
 
-// 🔥 UPDATED: Regenerates slug if title changes
 async function updateArticle(id, article) {
     try {
         const slug = generateSlug(article.title);

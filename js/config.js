@@ -1,5 +1,5 @@
 // ============================================
-//  SPORTS ARENA – FIRESTORE + IMGBB + SLUGS + ANALYTICS + COMMENTS
+//  SPORTS ARENA – FIRESTORE + IMGBB + SLUGS + ANALYTICS + COMMENTS + CONTENT
 // ============================================
 
 // ----- FIREBASE CONFIG -----
@@ -113,12 +113,14 @@ async function uploadImage(file) {
     });
 }
 
+// 🔥 UPDATED: Adds `content` field
 async function addArticle(article) {
     try {
         const slug = generateSlug(article.title);
         const docRef = await db.collection('articles').add({
             title: article.title,
             summary: article.summary,
+            content: article.content || article.summary, // Full article content
             category: article.category,
             author: article.author,
             image: article.image || 'https://picsum.photos/seed/sports/600/400',
@@ -133,12 +135,14 @@ async function addArticle(article) {
     }
 }
 
+// 🔥 UPDATED: Updates `content` field
 async function updateArticle(id, article) {
     try {
         const slug = generateSlug(article.title);
         await db.collection('articles').doc(id).update({
             title: article.title,
             summary: article.summary,
+            content: article.content || article.summary,
             category: article.category,
             author: article.author,
             image: article.image || 'https://picsum.photos/seed/sports/600/400',
@@ -161,10 +165,9 @@ async function deleteArticleById(id) {
 }
 
 // ============================================
-//  🔥 COMMENT FUNCTIONS (NEW)
+//  COMMENT FUNCTIONS
 // ============================================
 
-// Fetch comments for a specific article slug
 async function getComments(slug) {
     try {
         const snapshot = await db.collection('comments')
@@ -178,7 +181,6 @@ async function getComments(slug) {
     }
 }
 
-// Add a new comment
 async function addComment(slug, name, comment, email = '') {
     try {
         await db.collection('comments').add({
@@ -193,4 +195,4 @@ async function addComment(slug, name, comment, email = '') {
         console.error('Error adding comment:', error);
         return { success: false, error: error.message };
     }
-}
+  }

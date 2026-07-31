@@ -17,40 +17,32 @@ const db = firebase.firestore();
 
 const IMGBB_API_KEY = '17e055fb3d68d047117985b03c255ba3';
 
-// ============================================
-//  CATEGORIES (HARDCODED)
-// ============================================
 const CATEGORIES = ['Football','Basketball','Cricket','Tennis','Motorsport','Golf'];
 async function getCategories() {
     return CATEGORIES.map(name => ({ id: name, name }));
 }
 
-// ============================================
-//  SLUG GENERATOR
-// ============================================
 function generateSlug(title) {
     return title.toLowerCase().replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').slice(0,50);
 }
 
-// ============================================
-//  ARTICLE FUNCTIONS
-// ============================================
 async function getArticles() {
     try {
         const snapshot = await db.collection('articles').orderBy('date','desc').get();
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch(e){ console.error(e); return []; }
 }
+
 async function getArticleBySlug(slug) {
     try {
         const snapshot = await db.collection('articles').where('slug','==',slug).limit(1).get();
         if (snapshot.empty) return null;
         const doc = snapshot.docs[0];
         return { id: doc.id, ...doc.data() };
-    } catch(e){ return null; }
+    } catch(e){ console.error(e); return null; }
 }
 
-// View counter with analytics (called from article.html)
+// 🔥 VIEW LOGGING – now returns immediately, doesn't block
 async function incrementViewsAndLog(articleId, slug, country) {
     try {
         // Increment article view count
@@ -66,12 +58,11 @@ async function incrementViewsAndLog(articleId, slug, country) {
             country: country || 'Unknown'
         });
         return { success: true };
-    } catch(e){ console.error(e); return { success: false }; }
+    } catch(e){ console.error('View logging error (non‑critical):', e); return { success: false }; }
 }
 
-// Get view stats for analytics
+// Analytics functions (unchanged)
 async function getViewStats(period) {
-    // period: 'daily', 'weekly', 'monthly'
     const now = new Date();
     let startDate;
     if (period === 'daily') {
@@ -79,15 +70,12 @@ async function getViewStats(period) {
     } else if (period === 'weekly') {
         const day = now.getDay();
         startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day);
-    } else { // monthly
+    } else {
         startDate = new Date(now.getFullYear(), now.getMonth(), 1);
     }
     const startStr = startDate.toISOString().split('T')[0];
-    const snapshot = await db.collection('views')
-        .where('date', '>=', startStr)
-        .get();
-    const views = snapshot.docs.map(doc => doc.data());
-    return views;
+    const snapshot = await db.collection('views').where('date','>=',startStr).get();
+    return snapshot.docs.map(doc => doc.data());
 }
 
 async function getCountryStats(period) {
@@ -97,7 +85,6 @@ async function getCountryStats(period) {
         const c = v.country || 'Unknown';
         countryCount[c] = (countryCount[c] || 0) + 1;
     });
-    // Sort descending
     return Object.entries(countryCount).sort((a,b) => b[1] - a[1]);
 }
 
@@ -111,9 +98,7 @@ async function getArticleStats(period) {
     return articleCount;
 }
 
-// ============================================
-//  IMAGE UPLOAD (single) – used for feature image
-// ============================================
+// Image upload (single)
 async function uploadImage(file) {
     if (!file) return null;
     return new Promise((resolve, reject) => {
@@ -135,9 +120,7 @@ async function uploadImage(file) {
     });
 }
 
-// ============================================
-//  CRUD OPERATIONS (with tags)
-// ============================================
+// CRUD with tags
 async function addArticle(article) {
     try {
         const slug = generateSlug(article.title);
@@ -183,9 +166,7 @@ async function deleteArticleById(id) {
     } catch(e) { return { success: false, error: e.message }; }
 }
 
-// ============================================
-//  COMMENTS (unchanged)
-// ============================================
+// Comments
 async function getComments(slug) {
     try {
         const snapshot = await db.collection('comments').where('articleSlug','==',slug).orderBy('createdAt','asc').get();
@@ -203,4 +184,4 @@ async function addComment(slug, name, comment, email='') {
         });
         return { success: true };
     } catch(e){ return { success: false, error: e.message }; }
-                          }
+}

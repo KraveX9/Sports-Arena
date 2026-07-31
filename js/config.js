@@ -2,7 +2,7 @@
 //  SPORTS ARENA – FIREBASE FIRESTORE CONFIG
 // ============================================
 
-// ----- YOUR FIREBASE CONFIG (copied from Firebase Console) -----
+// ----- YOUR FIREBASE CONFIG -----
 const firebaseConfig = {
   apiKey: "AIzaSyBNYN6fBKqKXQEztVrdsVYqeZJO6q4LCx8",
   authDomain: "sportsarenablog-776bf.firebaseapp.com",
@@ -13,7 +13,6 @@ const firebaseConfig = {
   measurementId: "G-JGJ2N4KH0F"
 };
 
-// ----- INITIALIZE FIREBASE -----
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
@@ -36,11 +35,6 @@ async function getArticles() {
         const snapshot = await db.collection('articles')
             .orderBy('date', 'desc')
             .get();
-        
-        if (snapshot.empty) {
-            return [];
-        }
-        
         return snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
@@ -73,6 +67,24 @@ async function addArticle(article) {
     }
 }
 
+// 🔥 NEW: UPDATE an existing article
+async function updateArticle(id, article) {
+    try {
+        await db.collection('articles').doc(id).update({
+            title: article.title,
+            summary: article.summary,
+            category: article.category,
+            author: article.author,
+            image: article.image || 'https://picsum.photos/seed/sports/600/400',
+            date: new Date().toISOString().split('T')[0]
+        });
+        return { success: true };
+    } catch (error) {
+        console.error('Error updating article:', error);
+        return { success: false, error: error.message };
+    }
+}
+
 async function deleteArticleById(id) {
     try {
         await db.collection('articles').doc(id).delete();
@@ -81,4 +93,4 @@ async function deleteArticleById(id) {
         console.error('Error deleting article:', error);
         return { success: false, error: error.message };
     }
-      }
+}

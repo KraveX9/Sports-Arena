@@ -11,7 +11,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-
     <header class="navbar">
         <div class="container nav-container">
             <a href="index.html" class="brand">
@@ -21,36 +20,35 @@
             <nav class="nav-links">
                 <ul>
                     <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="analytics.html"><i class="fas fa-chart-line"></i> Analytics</a></li>
                     <li><a href="#" id="dashboardLogout" class="btn-outline-nav"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
                 </ul>
             </nav>
         </div>
     </header>
 
-    <div class="dashboard-hero" style="background: #fff; padding: 40px 0; border-bottom: 1px solid #e9edf2;">
+    <div class="dashboard-hero" style="background:#fff; padding:40px 0; border-bottom:1px solid #e9edf2;">
         <div class="container">
-            <h1 style="font-size: 2.2rem;">🛡️ Admin Dashboard</h1>
-            <p style="color: #64748b;">Manage your sports articles – create, edit, or delete content.</p>
+            <h1 style="font-size:2.2rem;">🛡️ Admin Dashboard</h1>
+            <p style="color:#64748b;">Manage your sports articles – create, edit, or delete content.</p>
         </div>
     </div>
 
-    <div class="container" style="padding: 40px 0;">
-
+    <div class="container" style="padding:40px 0;">
         <div class="dashboard-stats">
             <div class="stat-card"><div class="num" id="totalArticles">0</div><div class="label">Total Articles</div></div>
-            <div class="stat-card"><div class="num" id="totalCategories">6</div><div class="label">Categories</div></div>
+            <div class="stat-card"><div class="num">6</div><div class="label">Categories</div></div>
             <div class="stat-card"><div class="num">0</div><div class="label">Pending Reviews</div></div>
         </div>
 
-        <!-- ===== ARTICLE FORM (with Hardcoded Categories) ===== -->
-        <div style="background: #fff; border-radius: 24px; padding: 32px; margin-bottom: 40px; border: 1px solid #e9edf2; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
-            <h3 id="formTitle" style="margin-bottom: 16px;"><i class="fas fa-plus-circle" style="color: #f97316;"></i> Create New Article</h3>
-            <form id="articleForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                <input type="text" id="articleTitle" placeholder="Article Title" required style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; grid-column: 1 / -1;">
-                <input type="text" id="articleAuthor" placeholder="Author Name" required style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem;">
-
-                <select id="articleCategory" required style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; background: #fff;">
-                    <option value="">Select a category...</option>
+        <!-- ARTICLE FORM -->
+        <div style="background:#fff; border-radius:24px; padding:32px; margin-bottom:40px; border:1px solid #e9edf2;">
+            <h3 id="formTitle" style="margin-bottom:16px;"><i class="fas fa-plus-circle" style="color:#f97316;"></i> Create New Article</h3>
+            <form id="articleForm" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+                <input type="text" id="articleTitle" placeholder="Article Title" required style="padding:12px 16px; border-radius:12px; border:1.5px solid #e2e8f0; grid-column:1/-1;">
+                <input type="text" id="articleAuthor" placeholder="Author Name" required style="padding:12px 16px; border-radius:12px; border:1.5px solid #e2e8f0;">
+                <select id="articleCategory" required style="padding:12px 16px; border-radius:12px; border:1.5px solid #e2e8f0; background:#fff;">
+                    <option value="">Select category...</option>
                     <option value="Football">Football</option>
                     <option value="Basketball">Basketball</option>
                     <option value="Cricket">Cricket</option>
@@ -58,65 +56,55 @@
                     <option value="Motorsport">Motorsport</option>
                     <option value="Golf">Golf</option>
                 </select>
-
-                <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 4px;">
-                    <label style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Publish Date</label>
-                    <input type="date" id="articleDate" style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem;">
-                    <small style="color:#64748b;">Leave blank to use today's date.</small>
+                <!-- Tags -->
+                <input type="text" id="articleTags" placeholder="Tags (comma separated, e.g. EPL, Messi)" style="padding:12px 16px; border-radius:12px; border:1.5px solid #e2e8f0;">
+                <div style="grid-column:1/-1; display:flex; flex-direction:column; gap:4px;">
+                    <label style="font-weight:600; font-size:0.9rem; color:#1e293b;">Publish Date</label>
+                    <input type="date" id="articleDate" style="padding:12px 16px; border-radius:12px; border:1.5px solid #e2e8f0;">
                 </div>
-
-                <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 4px;">
-                    <label style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Full Article Content</label>
-                    <textarea id="articleContent" placeholder="Write your full article here..." rows="10" style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; font-family: inherit; resize: vertical;"></textarea>
-                    <small style="color:#64748b;">This will be displayed on the full article page.</small>
+                <div style="grid-column:1/-1; display:flex; flex-direction:column; gap:4px;">
+                    <label style="font-weight:600; font-size:0.9rem; color:#1e293b;">Full Article Content</label>
+                    <textarea id="articleContent" placeholder="Write your full article here..." rows="10" style="padding:12px 16px; border-radius:12px; border:1.5px solid #e2e8f0; font-family:inherit; resize:vertical;"></textarea>
+                    <button type="button" id="addImageBtn" style="align-self:flex-start; padding:8px 16px; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:40px; cursor:pointer; font-size:0.9rem;">
+                        <i class="fas fa-image"></i> Insert Image
+                    </button>
+                    <small style="color:#64748b;">Click "Insert Image" to upload and embed an image in the content.</small>
                 </div>
-
-                <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 4px;">
-                    <label style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Short Summary (Excerpt)</label>
-                    <textarea id="articleSummary" placeholder="Short summary for the homepage preview (max 150 chars)" rows="2" style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; font-family: inherit; resize: vertical;"></textarea>
-                    <small style="color:#64748b;">This will appear on the homepage and in search results.</small>
+                <div style="grid-column:1/-1; display:flex; flex-direction:column; gap:4px;">
+                    <label style="font-weight:600; font-size:0.9rem; color:#1e293b;">Short Summary (Excerpt)</label>
+                    <textarea id="articleSummary" placeholder="Short summary for homepage preview" rows="2" style="padding:12px 16px; border-radius:12px; border:1.5px solid #e2e8f0; font-family:inherit; resize:vertical;"></textarea>
                 </div>
-
-                <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px;">
-                    <label style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Featured Image</label>
-                    <input type="file" id="articleImageFile" accept="image/*" style="padding: 8px; border: 1.5px dashed #e2e8f0; border-radius: 12px; background: #f8fafc;">
-                    <div id="imagePreviewContainer" style="display: none; margin-top: 8px;">
-                        <img id="imagePreview" src="#" alt="Preview" style="max-width: 150px; max-height: 150px; border-radius: 12px; border: 1px solid #e2e8f0;">
-                        <button type="button" id="removeImageBtn" style="display:block; margin-top:4px; background:none; border:none; color:#ef4444; cursor:pointer; font-size:0.8rem;">
-                            <i class="fas fa-times-circle"></i> Remove Image
-                        </button>
+                <div style="grid-column:1/-1; display:flex; flex-direction:column; gap:8px;">
+                    <label style="font-weight:600; font-size:0.9rem; color:#1e293b;">Featured Image</label>
+                    <input type="file" id="articleImageFile" accept="image/*" style="padding:8px; border:1.5px dashed #e2e8f0; border-radius:12px;">
+                    <div id="imagePreviewContainer" style="display:none; margin-top:8px;">
+                        <img id="imagePreview" src="#" alt="Preview" style="max-width:150px; max-height:150px; border-radius:12px; border:1px solid #e2e8f0;">
+                        <button type="button" id="removeImageBtn" style="display:block; margin-top:4px; background:none; border:none; color:#ef4444; cursor:pointer;">Remove Image</button>
                     </div>
-                    <small style="color:#64748b;">Upload a JPG or PNG image. Max size 5MB.</small>
                 </div>
-
                 <input type="hidden" id="articleImageUrl" value="">
-
-                <button type="submit" id="submitBtn" class="btn-primary" style="grid-column: 1 / -1; justify-content: center; padding: 14px; border-radius: 60px; border: none; cursor: pointer;">
+                <button type="submit" id="submitBtn" class="btn-primary" style="grid-column:1/-1; justify-content:center; padding:14px; border-radius:60px; border:none; cursor:pointer;">
                     <i class="fas fa-cloud-upload-alt"></i> Publish Article
                 </button>
-                <button type="button" id="cancelEditBtn" style="grid-column: 1 / -1; background:none; border:none; color:#64748b; cursor:pointer; display:none; text-decoration:underline;">
-                    Cancel Editing
-                </button>
+                <button type="button" id="cancelEditBtn" style="grid-column:1/-1; background:none; border:none; color:#64748b; cursor:pointer; display:none; text-decoration:underline;">Cancel Editing</button>
             </form>
-            <div id="formMessage" style="margin-top: 12px; font-weight: 500;"></div>
+            <div id="formMessage" style="margin-top:12px; font-weight:500;"></div>
         </div>
 
-        <!-- MANAGE ARTICLES TABLE -->
-        <div style="background: #fff; border-radius: 24px; padding: 32px; border: 1px solid #e9edf2;">
-            <h3 style="margin-bottom: 20px;"><i class="fas fa-list-ul" style="color: #f97316;"></i> Manage Articles</h3>
-            <div style="overflow-x: auto;">
-                <table style="width:100%; border-collapse: collapse; font-size: 0.95rem;">
-                    <thead style="background: #f8fafc; text-align: left;">
+        <!-- MANAGE ARTICLES -->
+        <div style="background:#fff; border-radius:24px; padding:32px; border:1px solid #e9edf2;">
+            <h3 style="margin-bottom:20px;"><i class="fas fa-list-ul" style="color:#f97316;"></i> Manage Articles</h3>
+            <div style="overflow-x:auto;">
+                <table style="width:100%; border-collapse:collapse; font-size:0.95rem;">
+                    <thead style="background:#f8fafc; text-align:left;">
                         <tr>
-                            <th style="padding: 12px 16px;">Title</th>
-                            <th style="padding: 12px 16px;">Category</th>
-                            <th style="padding: 12px 16px;">Author</th>
-                            <th style="padding: 12px 16px; text-align:center;">Actions</th>
+                            <th style="padding:12px 16px;">Title</th>
+                            <th style="padding:12px 16px;">Category</th>
+                            <th style="padding:12px 16px;">Author</th>
+                            <th style="padding:12px 16px; text-align:center;">Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="adminArticleList">
-                        <tr><td colspan="4" style="text-align:center; padding:40px; color:#94a3b8;">Loading articles...</td></tr>
-                    </tbody>
+                    <tbody id="adminArticleList"><tr><td colspan="4" style="text-align:center; padding:40px; color:#94a3b8;">Loading articles...</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -125,9 +113,7 @@
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
     <script>
-        if (!isAdmin()) {
-            window.location.href = 'login.html';
-        }
+        if (!isAdmin()) window.location.href = 'login.html';
 
         let editingId = null;
         let currentImageFile = null;
@@ -143,32 +129,27 @@
             document.getElementById('imagePreview').src = '#';
             currentImageFile = null;
             document.getElementById('submitBtn').innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Publish Article';
-            document.getElementById('formTitle').innerHTML = '<i class="fas fa-plus-circle" style="color: #f97316;"></i> Create New Article';
+            document.getElementById('formTitle').innerHTML = '<i class="fas fa-plus-circle" style="color:#f97316;"></i> Create New Article';
             document.getElementById('cancelEditBtn').style.display = 'none';
             editingId = null;
             document.getElementById('formMessage').innerHTML = '';
             document.getElementById('articleCategory').value = '';
             document.getElementById('articleDate').value = getTodayDate();
+            document.getElementById('articleTags').value = '';
         }
 
         window.editArticle = function(id) {
             getArticles().then(articles => {
                 const article = articles.find(a => a.id === id);
-                if (!article) {
-                    alert('Article not found.');
-                    return;
-                }
+                if (!article) return alert('Article not found.');
                 document.getElementById('articleTitle').value = article.title || '';
                 document.getElementById('articleAuthor').value = article.author || '';
                 document.getElementById('articleSummary').value = article.summary || '';
                 document.getElementById('articleContent').value = article.content || article.summary || '';
                 document.getElementById('articleCategory').value = article.category || '';
-                if (article.date) {
-                    document.getElementById('articleDate').value = article.date;
-                } else {
-                    document.getElementById('articleDate').value = getTodayDate();
-                }
-
+                document.getElementById('articleTags').value = (article.tags || []).join(', ');
+                if (article.date) document.getElementById('articleDate').value = article.date;
+                else document.getElementById('articleDate').value = getTodayDate();
                 if (article.image) {
                     document.getElementById('articleImageUrl').value = article.image;
                     document.getElementById('imagePreview').src = article.image;
@@ -178,30 +159,58 @@
                     document.getElementById('imagePreviewContainer').style.display = 'none';
                     document.getElementById('articleImageUrl').value = '';
                 }
-
                 document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Update Article';
-                document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit" style="color: #f97316;"></i> Edit Article';
+                document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit" style="color:#f97316;"></i> Edit Article';
                 document.getElementById('cancelEditBtn').style.display = 'inline-block';
                 document.getElementById('formMessage').innerHTML = '';
                 editingId = id;
                 document.querySelector('.dashboard-hero').scrollIntoView({ behavior: 'smooth' });
-            }).catch(err => {
-                alert('Error loading article data: ' + err.message);
-            });
+            }).catch(err => alert('Error loading article: ' + err.message));
         };
 
+        // Image upload for content (insert image)
+        document.getElementById('addImageBtn').addEventListener('click', async function() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = async function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                if (file.size > 5*1024*1024) {
+                    alert('Image too large. Max 5MB.');
+                    return;
+                }
+                const msgDiv = document.getElementById('formMessage');
+                msgDiv.innerHTML = '<span style="color:#f97316;">⏳ Uploading image...</span>';
+                try {
+                    const url = await uploadImage(file);
+                    if (url) {
+                        const textarea = document.getElementById('articleContent');
+                        const imgTag = `\n<img src="${url}" alt="Image" style="max-width:100%; margin: 16px 0;">\n`;
+                        textarea.value += imgTag;
+                        msgDiv.innerHTML = '<span style="color:#16a34a;">✅ Image inserted!</span>';
+                        setTimeout(() => msgDiv.innerHTML = '', 3000);
+                    }
+                } catch(err) {
+                    msgDiv.innerHTML = `<span style="color:#dc2626;">❌ Upload failed: ${err.message}</span>`;
+                }
+            };
+            input.click();
+        });
+
+        // Image preview
         document.getElementById('articleImageFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
-                if (file.size > 5 * 1024 * 1024) {
-                    alert('Image is too large. Maximum size is 5MB.');
+                if (file.size > 5*1024*1024) {
+                    alert('Image too large. Max 5MB.');
                     this.value = '';
                     return;
                 }
                 currentImageFile = file;
                 const reader = new FileReader();
-                reader.onload = function(event) {
-                    document.getElementById('imagePreview').src = event.target.result;
+                reader.onload = function(ev) {
+                    document.getElementById('imagePreview').src = ev.target.result;
                     document.getElementById('imagePreviewContainer').style.display = 'block';
                 };
                 reader.readAsDataURL(file);
@@ -211,7 +220,6 @@
                 document.getElementById('imagePreviewContainer').style.display = 'none';
             }
         });
-
         document.getElementById('removeImageBtn').addEventListener('click', function() {
             document.getElementById('articleImageFile').value = '';
             document.getElementById('imagePreviewContainer').style.display = 'none';
@@ -219,25 +227,21 @@
             document.getElementById('articleImageUrl').value = '';
             currentImageFile = null;
         });
-
-        document.getElementById('cancelEditBtn').addEventListener('click', function() {
-            resetForm();
-        });
+        document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
 
         async function renderAdminTable() {
             const tbody = document.getElementById('adminArticleList');
-            if (!tbody) return;
             try {
                 const articles = await getArticles();
                 if (articles.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:40px; color:#94a3b8;">No articles yet. Create your first one above!</td></tr>`;
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:40px; color:#94a3b8;">No articles yet.</td></tr>';
                 } else {
-                    tbody.innerHTML = articles.map((a) => `
-                        <tr style="border-bottom: 1px solid #f1f5f9;">
-                            <td style="padding: 12px 16px; font-weight: 600;">${a.title}</td>
-                            <td style="padding: 12px 16px;"><span style="background:#f1f5f9; padding:4px 12px; border-radius:40px; font-size:0.8rem;">${a.category}</span></td>
-                            <td style="padding: 12px 16px;">${a.author}</td>
-                            <td style="padding: 12px 16px; text-align:center;">
+                    tbody.innerHTML = articles.map(a => `
+                        <tr style="border-bottom:1px solid #f1f5f9;">
+                            <td style="padding:12px 16px; font-weight:600;">${a.title}</td>
+                            <td style="padding:12px 16px;"><span style="background:#f1f5f9; padding:4px 12px; border-radius:40px; font-size:0.8rem;">${a.category}</span></td>
+                            <td style="padding:12px 16px;">${a.author}</td>
+                            <td style="padding:12px 16px; text-align:center;">
                                 <button onclick="editArticle('${a.id}')" style="background:none; border:none; color:#3b82f6; cursor:pointer; margin-right:8px;"><i class="fas fa-edit"></i></button>
                                 <button onclick="deleteArticle('${a.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer;"><i class="fas fa-trash"></i></button>
                             </td>
@@ -245,98 +249,69 @@
                     `).join('');
                 }
                 document.getElementById('totalArticles').textContent = articles.length;
-            } catch (error) {
-                console.error('Render error:', error);
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:40px; color:#ef4444;">❌ Error loading articles: ${error.message}</td></tr>`;
+            } catch(e) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:40px; color:#ef4444;">❌ Error: ${e.message}</td></tr>`;
             }
         }
 
         window.deleteArticle = async function(id) {
-            if (confirm('Delete this article permanently?')) {
-                const result = await deleteArticleById(id);
-                if (result.success) {
-                    alert('🗑️ Article deleted!');
-                    if (editingId === id) resetForm();
-                    await renderAdminTable();
-                    if (window.loadAndRender) window.loadAndRender();
-                } else {
-                    alert('❌ Delete failed: ' + result.error);
-                }
+            if (!confirm('Delete permanently?')) return;
+            const result = await deleteArticleById(id);
+            if (result.success) {
+                alert('Deleted!');
+                if (editingId === id) resetForm();
+                await renderAdminTable();
+                if (window.loadAndRender) window.loadAndRender();
+            } else {
+                alert('Delete failed: ' + result.error);
             }
         };
 
         document.getElementById('articleForm').addEventListener('submit', async function(e) {
             e.preventDefault();
-
             const title = document.getElementById('articleTitle').value.trim();
             const author = document.getElementById('articleAuthor').value.trim();
             const category = document.getElementById('articleCategory').value.trim();
-            const summary = document.getElementById('articleSummary').value.trim() || 'No summary provided.';
+            const summary = document.getElementById('articleSummary').value.trim() || 'No summary.';
             const content = document.getElementById('articleContent').value.trim() || summary;
             let imageUrl = document.getElementById('articleImageUrl').value;
-            let selectedDate = document.getElementById('articleDate').value || getTodayDate();
+            const date = document.getElementById('articleDate').value || getTodayDate();
+            const tags = document.getElementById('articleTags').value.split(',').map(t => t.trim()).filter(Boolean);
 
             const msgDiv = document.getElementById('formMessage');
-
             if (!title || !author || !category) {
-                msgDiv.innerHTML = '<span style="color:#dc2626;">❌ Please fill in Title, Author, and Category.</span>';
+                msgDiv.innerHTML = '<span style="color:#dc2626;">❌ Please fill in Title, Author, Category.</span>';
                 return;
             }
-
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-
             try {
                 if (currentImageFile) {
-                    msgDiv.innerHTML = '<span style="color:#f97316;">⏳ Uploading image...</span>';
-                    const uploadedUrl = await uploadImage(currentImageFile);
-                    if (uploadedUrl) {
-                        imageUrl = uploadedUrl;
-                        document.getElementById('articleImageUrl').value = uploadedUrl;
-                    }
+                    msgDiv.innerHTML = '<span style="color:#f97316;">⏳ Uploading featured image...</span>';
+                    const url = await uploadImage(currentImageFile);
+                    if (url) imageUrl = url;
                 }
-
-                if (!imageUrl) {
-                    imageUrl = 'https://picsum.photos/seed/sports/600/400';
-                }
+                if (!imageUrl) imageUrl = 'https://picsum.photos/seed/sports/600/400';
 
                 let result;
                 if (editingId) {
-                    result = await updateArticle(editingId, {
-                        title,
-                        author,
-                        category,
-                        image: imageUrl,
-                        summary,
-                        content,
-                        date: selectedDate
-                    });
+                    result = await updateArticle(editingId, { title, author, category, image: imageUrl, summary, content, date, tags });
                 } else {
-                    result = await addArticle({
-                        title,
-                        author,
-                        category,
-                        image: imageUrl,
-                        summary,
-                        content,
-                        date: selectedDate
-                    });
+                    result = await addArticle({ title, author, category, image: imageUrl, summary, content, date, tags });
                 }
-
                 if (result.success) {
-                    msgDiv.innerHTML = `<span style="color:#16a34a;">✅ Article ${editingId ? 'updated' : 'published'} successfully!</span>`;
+                    msgDiv.innerHTML = `<span style="color:#16a34a;">✅ Article ${editingId ? 'updated' : 'published'}!</span>`;
                     resetForm();
                     await renderAdminTable();
                     if (window.loadAndRender) window.loadAndRender();
                     setTimeout(() => msgDiv.innerHTML = '', 4000);
                 } else {
-                    msgDiv.innerHTML = `<span style="color:#dc2626;">❌ Failed to save: ${result.error}</span>`;
+                    msgDiv.innerHTML = `<span style="color:#dc2626;">❌ Failed: ${result.error}</span>`;
                 }
-            } catch (error) {
-                msgDiv.innerHTML = `<span style="color:#dc2626;">❌ An unexpected error occurred: ${error.message}</span>`;
+            } catch(err) {
+                msgDiv.innerHTML = `<span style="color:#dc2626;">❌ Error: ${err.message}</span>`;
             }
-
             btn.disabled = false;
             btn.innerHTML = editingId ? '<i class="fas fa-save"></i> Update Article' : '<i class="fas fa-cloud-upload-alt"></i> Publish Article';
         });
@@ -346,11 +321,11 @@
             adminLogout();
         });
 
-        async function initDashboard() {
+        async function init() {
             await renderAdminTable();
             document.getElementById('articleDate').value = getTodayDate();
         }
-        document.addEventListener('DOMContentLoaded', initDashboard);
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
     </html>

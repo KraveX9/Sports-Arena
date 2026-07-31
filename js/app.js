@@ -1,5 +1,5 @@
 // ============================================
-//  PUBLIC BLOG ENGINE (WITH SEARCH)
+//  PUBLIC BLOG ENGINE (WITH SEARCH + SOCIAL SHARE)
 // ============================================
 
 let currentCategory = 'All';
@@ -60,7 +60,6 @@ function renderCategories() {
     });
 }
 
-// 🔥 NEW: Filter articles by category + search
 function getFilteredArticles() {
     let filtered = allArticles;
     if (currentCategory !== 'All') {
@@ -80,6 +79,58 @@ function getFilteredArticles() {
 function applyFilters() {
     const filtered = getFilteredArticles();
     renderArticles(filtered);
+}
+
+// 🔥 NEW: Generate share buttons HTML
+function getShareButtons(article) {
+    const url = window.location.href;
+    const title = encodeURIComponent(article.title);
+    const shareUrl = encodeURIComponent(url);
+    
+    return `
+        <div class="article-share">
+            <span class="share-label"><i class="fas fa-share-alt"></i> Share:</span>
+            <a href="https://twitter.com/intent/tweet?text=${title}&url=${shareUrl}" target="_blank" rel="noopener" class="share-btn twitter" title="Share on Twitter">
+                <i class="fab fa-twitter"></i>
+            </a>
+            <a href="https://www.facebook.com/sharer/sharer.php?u=${shareUrl}" target="_blank" rel="noopener" class="share-btn facebook" title="Share on Facebook">
+                <i class="fab fa-facebook-f"></i>
+            </a>
+            <a href="https://api.whatsapp.com/send?text=${title}%20${shareUrl}" target="_blank" rel="noopener" class="share-btn whatsapp" title="Share on WhatsApp">
+                <i class="fab fa-whatsapp"></i>
+            </a>
+            <button onclick="copyLink('${shareUrl}')" class="share-btn copy" title="Copy link">
+                <i class="fas fa-link"></i>
+            </button>
+        </div>
+    `;
+}
+
+// 🔥 NEW: Copy link function
+window.copyLink = function(url) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(decodeURIComponent(url)).then(() => {
+            alert('✅ Link copied to clipboard!');
+        }).catch(() => {
+            fallbackCopy(decodeURIComponent(url));
+        });
+    } else {
+        fallbackCopy(decodeURIComponent(url));
+    }
+};
+
+function fallbackCopy(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+        document.execCommand('copy');
+        alert('✅ Link copied to clipboard!');
+    } catch (err) {
+        alert('❌ Failed to copy. Please copy the URL manually.');
+    }
+    document.body.removeChild(textArea);
 }
 
 function renderArticles(filteredArticles) {
@@ -115,6 +166,7 @@ function renderArticles(filteredArticles) {
                         <span class="author"><i class="fas fa-user-edit"></i> ${a.author}</span>
                         <span><i class="far fa-calendar-alt"></i> ${a.date}</span>
                     </div>
+                    ${getShareButtons(a)}
                     <a href="#" class="read-more">Read More <i class="fas fa-arrow-right"></i></a>
                 </div>
             </div>
@@ -136,7 +188,7 @@ function updateStats() {
     if (statAuthors) statAuthors.textContent = authors.size;
 }
 
-// 🔥 Search input listener
+// Search input listener
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {

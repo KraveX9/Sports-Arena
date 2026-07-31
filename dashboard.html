@@ -42,14 +42,22 @@
             <div class="stat-card"><div class="num">0</div><div class="label">Pending Reviews</div></div>
         </div>
 
-        <!-- ===== ARTICLE FORM (with Full Content) ===== -->
+        <!-- ===== ARTICLE FORM (with Hardcoded Categories) ===== -->
         <div style="background: #fff; border-radius: 24px; padding: 32px; margin-bottom: 40px; border: 1px solid #e9edf2; box-shadow: 0 4px 12px rgba(0,0,0,0.02);">
             <h3 id="formTitle" style="margin-bottom: 16px;"><i class="fas fa-plus-circle" style="color: #f97316;"></i> Create New Article</h3>
             <form id="articleForm" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
                 <input type="text" id="articleTitle" placeholder="Article Title" required style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; grid-column: 1 / -1;">
                 <input type="text" id="articleAuthor" placeholder="Author Name" required style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem;">
+                
+                <!-- 🔥 HARDCODED CATEGORIES – Guaranteed to show up -->
                 <select id="articleCategory" required style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; background: #fff;">
                     <option value="">Select a category...</option>
+                    <option value="Football">Football</option>
+                    <option value="Basketball">Basketball</option>
+                    <option value="Cricket">Cricket</option>
+                    <option value="Tennis">Tennis</option>
+                    <option value="Motorsport">Motorsport</option>
+                    <option value="Golf">Golf</option>
                 </select>
 
                 <!-- Date Picker -->
@@ -59,18 +67,18 @@
                     <small style="color:#64748b;">Leave blank to use today's date.</small>
                 </div>
 
-                <!-- 🔥 NEW: Full Content (the actual article) -->
+                <!-- Full Content -->
                 <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 4px;">
                     <label style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Full Article Content</label>
                     <textarea id="articleContent" placeholder="Write your full article here..." rows="10" style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; font-family: inherit; resize: vertical;"></textarea>
                     <small style="color:#64748b;">This will be displayed on the full article page.</small>
                 </div>
 
-                <!-- Summary (Excerpt) -->
+                <!-- Summary -->
                 <div style="grid-column: 1 / -1; display: flex; flex-direction: column; gap: 4px;">
                     <label style="font-weight: 600; font-size: 0.9rem; color: #1e293b;">Short Summary (Excerpt)</label>
                     <textarea id="articleSummary" placeholder="Short summary for the homepage preview (max 150 chars)" rows="2" style="padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 1rem; font-family: inherit; resize: vertical;"></textarea>
-                    <small style="color:#64748b;">This will appear on the homepage and in search results. Max 150 characters.</small>
+                    <small style="color:#64748b;">This will appear on the homepage and in search results.</small>
                 </div>
 
                 <!-- Image Upload -->
@@ -128,26 +136,6 @@
 
         let editingId = null;
         let currentImageFile = null;
-        let allCategories = [];
-
-        async function refreshCategories() {
-            allCategories = await getCategories();
-            populateCategoryDropdown(allCategories);
-            document.getElementById('totalCategories').textContent = allCategories.length;
-        }
-
-        function populateCategoryDropdown(categories, selectedValue = '') {
-            const dropdown = document.getElementById('articleCategory');
-            if (!dropdown) return;
-            dropdown.innerHTML = '<option value="">Select a category...</option>';
-            categories.forEach(cat => {
-                const opt = document.createElement('option');
-                opt.value = cat.name;
-                opt.textContent = cat.name;
-                if (cat.name === selectedValue) opt.selected = true;
-                dropdown.appendChild(opt);
-            });
-        }
 
         function getTodayDate() {
             return new Date().toISOString().split('T')[0];
@@ -168,6 +156,7 @@
             document.getElementById('articleDate').value = getTodayDate();
         }
 
+        // ---------- EDIT ARTICLE ----------
         window.editArticle = function(id) {
             getArticles().then(articles => {
                 const article = articles.find(a => a.id === id);
@@ -179,7 +168,10 @@
                 document.getElementById('articleAuthor').value = article.author || '';
                 document.getElementById('articleSummary').value = article.summary || '';
                 document.getElementById('articleContent').value = article.content || article.summary || '';
-                populateCategoryDropdown(allCategories, article.category);
+                
+                // 🔥 Simply set the dropdown value to the article's category
+                const dropdown = document.getElementById('articleCategory');
+                if (dropdown) dropdown.value = article.category || '';
 
                 if (article.date) {
                     document.getElementById('articleDate').value = article.date;
@@ -208,6 +200,7 @@
             });
         };
 
+        // ---------- IMAGE UPLOAD ----------
         document.getElementById('articleImageFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
@@ -242,6 +235,7 @@
             resetForm();
         });
 
+        // ---------- RENDER TABLE ----------
         async function renderAdminTable() {
             const tbody = document.getElementById('adminArticleList');
             if (!tbody) return;
@@ -263,6 +257,8 @@
                     `).join('');
                 }
                 document.getElementById('totalArticles').textContent = articles.length;
+                // Update categories count (just show the static number)
+                document.getElementById('totalCategories').textContent = '6';
             } catch (error) {
                 console.error('Render error:', error);
                 tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:40px; color:#ef4444;">❌ Error loading articles: ${error.message}</td></tr>`;
@@ -283,6 +279,7 @@
             }
         };
 
+        // ---------- SUBMIT FORM ----------
         document.getElementById('articleForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
@@ -360,6 +357,4 @@
         });
 
         document.getElementById('dashboardLogout').addEventListener('click', function(e) {
-            e.preventDefault();
-            adminLogout();
-        
+            e.preventDefaul

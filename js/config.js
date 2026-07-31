@@ -1,8 +1,8 @@
 // ============================================
-//  SPORTS ARENA – FIREBASE FIRESTORE + STORAGE
+//  SPORTS ARENA – FIREBASE FIRESTORE + IMGBB
 // ============================================
 
-// ----- YOUR FIREBASE CONFIG -----
+// ----- FIREBASE CONFIG -----
 const firebaseConfig = {
   apiKey: "AIzaSyBNYN6fBKqKXQEztVrdsVYqeZJO6q4LCx8",
   authDomain: "sportsarenablog-776bf.firebaseapp.com",
@@ -13,10 +13,11 @@ const firebaseConfig = {
   measurementId: "G-JGJ2N4KH0F"
 };
 
-// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-const storage = firebase.storage(); // 🔥 NEW: Initialize Storage
+
+// ----- IMGBB API KEY (YOUR KEY INSERTED) -----
+const IMGBB_API_KEY = '17e055fb3d68d047117985b03c255ba3';
 
 // ----- MOCK CATEGORIES -----
 const mockCategories = [
@@ -51,31 +52,36 @@ async function getCategories() {
     return mockCategories;
 }
 
-// 🔥 NEW: Upload image to Firebase Storage
+// 🔥 Upload image to ImgBB (100% FREE – using your key)
 async function uploadImage(file) {
     if (!file) return null;
-    
-    // Create a unique filename
-    const timestamp = Date.now();
-    const filename = `articles/${timestamp}_${file.name}`;
-    const uploadTask = storage.ref(filename).put(file);
 
     return new Promise((resolve, reject) => {
-        uploadTask.on(
-            'state_changed',
-            (snapshot) => {
-                // Optional: track progress here later
-            },
-            (error) => {
-                console.error('Upload error:', error);
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async () => {
+            try {
+                const base64Image = reader.result.split(',')[1];
+                const formData = new FormData();
+                formData.append('key', IMGBB_API_KEY);
+                formData.append('image', base64Image);
+
+                const response = await fetch('https://api.imgbb.com/1/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    resolve(data.data.url);
+                } else {
+                    reject(new Error(data.error?.message || 'ImgBB upload failed'));
+                }
+            } catch (error) {
                 reject(error);
-            },
-            async () => {
-                // Get the download URL
-                const downloadURL = await uploadTask.snapshot.ref.getDownloadURL();
-                resolve(downloadURL);
             }
-        );
+        };
+        reader.onerror = () => reject(new Error('Failed to read image file'));
     });
 }
 

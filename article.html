@@ -122,9 +122,125 @@
             font-size: 0.9rem;
             margin-left: 8px;
         }
+
+        /* ===== COMMENTS STYLES ===== */
+        .comments-section {
+            margin-top: 40px;
+            padding-top: 32px;
+            border-top: 2px solid #f1f5f9;
+        }
+        .comments-section h3 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #0b1a2e;
+            margin-bottom: 8px;
+        }
+        .comments-section .comments-count {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            margin-bottom: 24px;
+        }
+        .comment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        .comment-item {
+            background: #f8fafc;
+            padding: 16px 20px;
+            border-radius: 16px;
+            border: 1px solid #e9edf2;
+        }
+        .comment-item .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+        }
+        .comment-item .comment-name {
+            font-weight: 600;
+            color: #0b1a2e;
+        }
+        .comment-item .comment-date {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+        .comment-item .comment-text {
+            color: #1e293b;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+        .comment-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .comment-form .form-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .comment-form input,
+        .comment-form textarea {
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1.5px solid #e2e8f0;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: 0.2s;
+        }
+        .comment-form input:focus,
+        .comment-form textarea:focus {
+            outline: none;
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px rgba(249,115,22,0.1);
+        }
+        .comment-form .form-row input {
+            flex: 1;
+            min-width: 150px;
+        }
+        .comment-form textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .comment-form .btn-submit {
+            align-self: flex-start;
+            padding: 10px 28px;
+            background: #f97316;
+            color: #fff;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .comment-form .btn-submit:hover {
+            background: #ea580c;
+        }
+        .comment-form .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .comment-message {
+            margin-top: 12px;
+            font-weight: 500;
+        }
+        .no-comments {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            text-align: center;
+            padding: 20px 0;
+        }
+
         @media (max-width: 640px) {
             .single-article .container { padding: 24px; }
             .single-article h1 { font-size: 1.8rem; }
+            .comment-form .form-row { flex-direction: column; }
+            .comment-form .form-row input { flex: 1; }
         }
     </style>
 </head>
@@ -242,16 +358,54 @@
                     return;
                 }
 
-                // 🔥 Increment view count
+                // Increment views
                 await incrementViews(article.id);
-
-                // 🔥 Fetch the updated view count
                 const updatedArticle = await getArticleBySlug(slug);
                 const viewCount = updatedArticle?.views || 0;
+
+                // 🔥 Load comments
+                const comments = await getComments(slug);
 
                 const url = window.location.href;
                 const title = encodeURIComponent(article.title);
                 const shareUrl = encodeURIComponent(url);
+
+                // Build comments HTML
+                let commentsHtml = `<div class="comments-section" id="commentsSection">
+                    <h3><i class="fas fa-comments"></i> Comments</h3>
+                    <div class="comments-count">${comments.length} comment${comments.length !== 1 ? 's' : ''}</div>
+                    <div class="comment-list" id="commentList">
+                `;
+
+                if (comments.length === 0) {
+                    commentsHtml += `<div class="no-comments">No comments yet. Be the first to share your thoughts!</div>`;
+                } else {
+                    comments.forEach(c => {
+                        const date = c.createdAt ? new Date(c.createdAt.toDate()).toLocaleDateString() : '';
+                        commentsHtml += `
+                            <div class="comment-item">
+                                <div class="comment-header">
+                                    <span class="comment-name">${c.name}</span>
+                                    <span class="comment-date">${date}</span>
+                                </div>
+                                <p class="comment-text">${c.comment}</p>
+                            </div>
+                        `;
+                    });
+                }
+
+                commentsHtml += `
+                    </div>
+                    <form class="comment-form" id="commentForm">
+                        <div class="form-row">
+                            <input type="text" id="commentName" placeholder="Your name *" required>
+                            <input type="email" id="commentEmail" placeholder="Email (optional)">
+                        </div>
+                        <textarea id="commentText" placeholder="Your comment..." required></textarea>
+                        <button type="submit" class="btn-submit" id="commentSubmit">Post Comment</button>
+                        <div class="comment-message" id="commentMessage"></div>
+                    </form>
+                </div>`;
 
                 const html = `
                     <span class="article-category-badge">${article.category}</span>
@@ -275,50 +429,41 @@
                     </div>
 
                     <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to all articles</a>
+                    
+                    ${commentsHtml}
                 `;
 
                 document.getElementById('articleContainer').innerHTML = html;
 
-            } catch (error) {
-                document.getElementById('articleContainer').innerHTML = `
-                    <div style="text-align:center; padding:40px 0;">
-                        <i class="fas fa-exclamation-triangle" style="font-size:2rem; color:#dc2626;"></i>
-                        <h2 style="margin:16px 0;">Error loading article</h2>
-                        <p style="color:#64748b;">${error.message}</p>
-                        <a href="index.html" class="btn-primary" style="text-decoration:none; display:inline-block;">← Back to Home</a>
-                    </div>
-                `;
-            }
-        }
+                // Attach comment form event
+                const form = document.getElementById('commentForm');
+                if (form) {
+                    form.addEventListener('submit', async function(e) {
+                        e.preventDefault();
+                        const name = document.getElementById('commentName').value.trim();
+                        const email = document.getElementById('commentEmail').value.trim();
+                        const comment = document.getElementById('commentText').value.trim();
+                        const msgDiv = document.getElementById('commentMessage');
+                        const submitBtn = document.getElementById('commentSubmit');
 
-        window.copyLink = function(url) {
-            const realUrl = decodeURIComponent(url);
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(realUrl).then(() => {
-                    alert('✅ Link copied to clipboard!');
-                }).catch(() => {
-                    fallbackCopy(realUrl);
-                });
-            } else {
-                fallbackCopy(realUrl);
-            }
-        };
+                        if (!name || !comment) {
+                            msgDiv.innerHTML = '<span style="color:#dc2626;">Please fill in your name and comment.</span>';
+                            return;
+                        }
 
-        function fallbackCopy(text) {
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            document.body.appendChild(textArea);
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                alert('✅ Link copied to clipboard!');
-            } catch (err) {
-                alert('❌ Failed to copy. Please copy the URL manually.');
-            }
-            document.body.removeChild(textArea);
-        }
+                        submitBtn.disabled = true;
+                        submitBtn.textContent = 'Posting...';
+                        msgDiv.innerHTML = '';
 
-        document.addEventListener('DOMContentLoaded', loadArticle);
-    </script>
-</body>
-        </html>
+                        const result = await addComment(slug, name, comment, email);
+                        if (result.success) {
+                            msgDiv.innerHTML = '<span style="color:#16a34a;">✅ Comment posted! Reloading...</span>';
+                            // Reload comments by re-fetching and updating the list
+                            const freshComments = await getComments(slug);
+                            const list = document.getElementById('commentList');
+                            const countDiv = document.querySelector('.comments-count');
+                            if (list) {
+                                if (freshComments.length === 0) {
+                                    list.innerHTML = '<div class="no-comments">No comments yet.</div>';
+                                } else {
+                                    list.innerHTML = freshComments.map(c

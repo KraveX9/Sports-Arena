@@ -1,8 +1,7 @@
 // ============================================
-//  SPORTS ARENA – FIRESTORE + IMGBB + SLUGS + ANALYTICS + COMMENTS + CONTENT
+//  SPORTS ARENA – FIRESTORE + IMGBB + ANALYTICS + TAGS + CONTENT
 // ============================================
 
-// ----- FIREBASE CONFIG -----
 const firebaseConfig = {
   apiKey: "AIzaSyBNYN6fBKqKXQEztVrdsVYqeZJO6q4LCx8",
   authDomain: "sportsarenablog-776bf.firebaseapp.com",
@@ -16,21 +15,12 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// ----- IMGBB API KEY -----
 const IMGBB_API_KEY = '17e055fb3d68d047117985b03c255ba3';
 
 // ============================================
-//  CATEGORIES (HARDCODED – NO FIRESTORE CALL)
+//  CATEGORIES (HARDCODED)
 // ============================================
-const CATEGORIES = [
-    'Football',
-    'Basketball',
-    'Cricket',
-    'Tennis',
-    'Motorsport',
-    'Golf'
-];
-
+const CATEGORIES = ['Football','Basketball','Cricket','Tennis','Motorsport','Golf'];
 async function getCategories() {
     return CATEGORIES.map(name => ({ id: name, name }));
 }
@@ -39,54 +29,91 @@ async function getCategories() {
 //  SLUG GENERATOR
 // ============================================
 function generateSlug(title) {
-    return title
-        .toLowerCase()
-        .replace(/[^a-z0-9\s-]/g, '')
-        .replace(/\s+/g, '-')
-        .slice(0, 50);
+    return title.toLowerCase().replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').slice(0,50);
 }
 
 // ============================================
 //  ARTICLE FUNCTIONS
 // ============================================
-
 async function getArticles() {
     try {
-        const snapshot = await db.collection('articles').orderBy('date', 'desc').get();
+        const snapshot = await db.collection('articles').orderBy('date','desc').get();
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    } catch (error) {
-        console.error('Error fetching articles:', error);
-        return [];
-    }
+    } catch(e){ console.error(e); return []; }
 }
-
 async function getArticleBySlug(slug) {
     try {
-        const snapshot = await db.collection('articles')
-            .where('slug', '==', slug)
-            .limit(1)
-            .get();
+        const snapshot = await db.collection('articles').where('slug','==',slug).limit(1).get();
         if (snapshot.empty) return null;
         const doc = snapshot.docs[0];
         return { id: doc.id, ...doc.data() };
-    } catch (error) {
-        console.error('Error fetching article by slug:', error);
-        return null;
-    }
+    } catch(e){ return null; }
 }
 
-async function incrementViews(id) {
+// View counter with analytics (called from article.html)
+async function incrementViewsAndLog(articleId, slug, country) {
     try {
-        await db.collection('articles').doc(id).update({
+        // Increment article view count
+        await db.collection('articles').doc(articleId).update({
             views: firebase.firestore.FieldValue.increment(1)
         });
+        // Log view event with country
+        await db.collection('views').add({
+            articleSlug: slug,
+            articleId: articleId,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            date: new Date().toISOString().split('T')[0],
+            country: country || 'Unknown'
+        });
         return { success: true };
-    } catch (error) {
-        console.error('Error incrementing views:', error);
-        return { success: false };
-    }
+    } catch(e){ console.error(e); return { success: false }; }
 }
 
+// Get view stats for analytics
+async function getViewStats(period) {
+    // period: 'daily', 'weekly', 'monthly'
+    const now = new Date();
+    let startDate;
+    if (period === 'daily') {
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    } else if (period === 'weekly') {
+        const day = now.getDay();
+        startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day);
+    } else { // monthly
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    }
+    const startStr = startDate.toISOString().split('T')[0];
+    const snapshot = await db.collection('views')
+        .where('date', '>=', startStr)
+        .get();
+    const views = snapshot.docs.map(doc => doc.data());
+    return views;
+}
+
+async function getCountryStats(period) {
+    const views = await getViewStats(period);
+    const countryCount = {};
+    views.forEach(v => {
+        const c = v.country || 'Unknown';
+        countryCount[c] = (countryCount[c] || 0) + 1;
+    });
+    // Sort descending
+    return Object.entries(countryCount).sort((a,b) => b[1] - a[1]);
+}
+
+async function getArticleStats(period) {
+    const views = await getViewStats(period);
+    const articleCount = {};
+    views.forEach(v => {
+        const slug = v.articleSlug || 'unknown';
+        articleCount[slug] = (articleCount[slug] || 0) + 1;
+    });
+    return articleCount;
+}
+
+// ============================================
+//  IMAGE UPLOAD (single) – used for feature image
+// ============================================
 async function uploadImage(file) {
     if (!file) return null;
     return new Promise((resolve, reject) => {
@@ -100,19 +127,17 @@ async function uploadImage(file) {
                 formData.append('image', base64Image);
                 const response = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
                 const data = await response.json();
-                if (data.success) {
-                    resolve(data.data.url);
-                } else {
-                    reject(new Error(data.error?.message || 'ImgBB upload failed'));
-                }
-            } catch (error) {
-                reject(error);
-            }
+                if (data.success) resolve(data.data.url);
+                else reject(new Error(data.error?.message || 'Upload failed'));
+            } catch(e) { reject(e); }
         };
-        reader.onerror = () => reject(new Error('Failed to read image file'));
+        reader.onerror = () => reject(new Error('Failed to read file'));
     });
 }
 
+// ============================================
+//  CRUD OPERATIONS (with tags)
+// ============================================
 async function addArticle(article) {
     try {
         const slug = generateSlug(article.title);
@@ -126,12 +151,11 @@ async function addArticle(article) {
             date: article.date || new Date().toISOString().split('T')[0],
             slug: slug,
             views: 0,
+            tags: article.tags || [],
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         return { success: true, id: docRef.id };
-    } catch (error) {
-        return { success: false, error: error.message };
-    }
+    } catch(e) { return { success: false, error: e.message }; }
 }
 
 async function updateArticle(id, article) {
@@ -145,41 +169,30 @@ async function updateArticle(id, article) {
             author: article.author,
             image: article.image || 'https://picsum.photos/seed/sports/600/400',
             date: article.date || new Date().toISOString().split('T')[0],
-            slug: slug
+            slug: slug,
+            tags: article.tags || []
         });
         return { success: true };
-    } catch (error) {
-        return { success: false, error: error.message };
-    }
+    } catch(e) { return { success: false, error: e.message }; }
 }
 
 async function deleteArticleById(id) {
     try {
         await db.collection('articles').doc(id).delete();
         return { success: true };
-    } catch (error) {
-        return { success: false, error: error.message };
-    }
+    } catch(e) { return { success: false, error: e.message }; }
 }
 
 // ============================================
-//  COMMENT FUNCTIONS
+//  COMMENTS (unchanged)
 // ============================================
-
 async function getComments(slug) {
     try {
-        const snapshot = await db.collection('comments')
-            .where('articleSlug', '==', slug)
-            .orderBy('createdAt', 'asc')
-            .get();
+        const snapshot = await db.collection('comments').where('articleSlug','==',slug).orderBy('createdAt','asc').get();
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    } catch (error) {
-        console.error('Error fetching comments:', error);
-        return [];
-    }
+    } catch(e){ return []; }
 }
-
-async function addComment(slug, name, comment, email = '') {
+async function addComment(slug, name, comment, email='') {
     try {
         await db.collection('comments').add({
             articleSlug: slug,
@@ -189,8 +202,5 @@ async function addComment(slug, name, comment, email = '') {
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         return { success: true };
-    } catch (error) {
-        console.error('Error adding comment:', error);
-        return { success: false, error: error.message };
-    }
-    }
+    } catch(e){ return { success: false, error: e.message }; }
+                          }

@@ -29,8 +29,13 @@ function generateSlug(title) {
 async function getArticles() {
     try {
         const snapshot = await db.collection('articles').orderBy('date','desc').get();
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    } catch(e){ console.error(e); return []; }
+        const articles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        console.log('✅ getArticles loaded:', articles.length);
+        return articles;
+    } catch(e){ 
+        console.error('❌ getArticles error:', e);
+        return []; 
+    }
 }
 
 async function getArticleBySlug(slug) {
@@ -42,14 +47,11 @@ async function getArticleBySlug(slug) {
     } catch(e){ console.error(e); return null; }
 }
 
-// 🔥 VIEW LOGGING – now returns immediately, doesn't block
 async function incrementViewsAndLog(articleId, slug, country) {
     try {
-        // Increment article view count
         await db.collection('articles').doc(articleId).update({
             views: firebase.firestore.FieldValue.increment(1)
         });
-        // Log view event with country
         await db.collection('views').add({
             articleSlug: slug,
             articleId: articleId,
@@ -58,10 +60,9 @@ async function incrementViewsAndLog(articleId, slug, country) {
             country: country || 'Unknown'
         });
         return { success: true };
-    } catch(e){ console.error('View logging error (non‑critical):', e); return { success: false }; }
+    } catch(e){ console.error('View logging error:', e); return { success: false }; }
 }
 
-// Analytics functions (unchanged)
 async function getViewStats(period) {
     const now = new Date();
     let startDate;
@@ -98,7 +99,6 @@ async function getArticleStats(period) {
     return articleCount;
 }
 
-// Image upload (single)
 async function uploadImage(file) {
     if (!file) return null;
     return new Promise((resolve, reject) => {
@@ -112,15 +112,17 @@ async function uploadImage(file) {
                 formData.append('image', base64Image);
                 const response = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
                 const data = await response.json();
-                if (data.success) resolve(data.data.url);
-                else reject(new Error(data.error?.message || 'Upload failed'));
+                if (data.success) {
+                    resolve(data.data.url);
+                } else {
+                    reject(new Error(data.error?.message || 'ImgBB upload failed'));
+                }
             } catch(e) { reject(e); }
         };
         reader.onerror = () => reject(new Error('Failed to read file'));
     });
 }
 
-// CRUD with tags
 async function addArticle(article) {
     try {
         const slug = generateSlug(article.title);
@@ -166,7 +168,6 @@ async function deleteArticleById(id) {
     } catch(e) { return { success: false, error: e.message }; }
 }
 
-// Comments
 async function getComments(slug) {
     try {
         const snapshot = await db.collection('comments').where('articleSlug','==',slug).orderBy('createdAt','asc').get();

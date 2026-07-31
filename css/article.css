@@ -22,4 +22,60 @@
     border-color: #f97316;
     background: #fff7ed;
     box-shadow: 0 0 0 4px rgba(249,115,22,0.15);
-      }
+}
+
+/* ===== 🔥 SOCIAL SHARE BUTTONS ===== */
+.article-share {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-top: 14px;
+    margin-top: 14px;
+    border-top: 1px solid #f1f5f9;
+    flex-wrap: wrap;
+}
+
+.share-label {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-right: 4px;
+    font-weight: 500;
+}
+
+.share-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: 0.2s ease;
+    text-decoration: none;
+}
+
+.share-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+}
+
+.share-btn.twitter:hover {
+    background: #1da1f2;
+    color: #fff;
+}
+.share-btn.facebook:hover {
+    background: #1877f2;
+    color: #fff;
+}
+.share-btn.whatsapp:hover {
+    background: #25d366;
+    color: #fff;
+}
+.share-btn.copy:hover {
+    background: #0b1a2e;
+    color: #fff;
+    }

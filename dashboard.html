@@ -7,8 +7,187 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- 🔥 TINYMCE EDITOR (WordPress-style) -->
+    <script src="https://cdn.tiny.cloud/1/your-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <!-- Mobile Console -->
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>eruda.init();</script>
+
+    <style>
+        /* WordPress-style editor layout */
+        .wp-editor-wrapper {
+            display: flex;
+            gap: 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        .wp-editor-main {
+            flex: 2;
+            min-width: 0;
+        }
+        .wp-editor-sidebar {
+            flex: 1;
+            min-width: 220px;
+        }
+        .wp-editor-sidebar .card {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .wp-editor-sidebar .card h4 {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            margin-bottom: 12px;
+        }
+        .wp-editor-sidebar input[type="text"],
+        .wp-editor-sidebar select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+        .wp-editor-sidebar textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+        }
+        .wp-editor-sidebar .btn-primary {
+            width: 100%;
+            justify-content: center;
+            padding: 12px;
+            border-radius: 40px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            background: #f97316;
+            color: #fff;
+        }
+        .wp-editor-sidebar .btn-primary:hover {
+            background: #ea580c;
+        }
+        .wp-editor-sidebar .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .wp-editor-sidebar .preview-img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 8px;
+            border: 1px solid #e2e8f0;
+        }
+        .wp-editor-sidebar .remove-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+        .wp-editor-sidebar .file-input {
+            padding: 8px;
+            border: 1.5px dashed #e2e8f0;
+            border-radius: 8px;
+            width: 100%;
+            font-size: 0.85rem;
+        }
+        .wp-editor-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 12px 16px;
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-bottom: none;
+            border-radius: 12px 12px 0 0;
+        }
+        .wp-editor-toolbar button {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: 0.2s;
+            color: #1e293b;
+            font-weight: 500;
+        }
+        .wp-editor-toolbar button:hover {
+            background: #f1f5f9;
+            border-color: #94a3b8;
+        }
+        .wp-editor-toolbar button i {
+            margin-right: 4px;
+        }
+        .wp-editor-content {
+            border: 1.5px solid #e2e8f0;
+            border-radius: 0 0 12px 12px;
+            background: #fff;
+            min-height: 400px;
+            padding: 16px;
+        }
+        .wp-editor-content:focus {
+            outline: none;
+            border-color: #f97316;
+        }
+        .wp-editor-title {
+            font-size: 2rem;
+            font-weight: 700;
+            border: none;
+            border-bottom: 2px solid transparent;
+            padding: 8px 0;
+            width: 100%;
+            margin-bottom: 16px;
+            background: transparent;
+            color: #0b1a2e;
+        }
+        .wp-editor-title:focus {
+            outline: none;
+            border-bottom-color: #f97316;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+        .status-badge.draft { background: #f1f5f9; color: #475569; }
+        .status-badge.published { background: #dcfce7; color: #16a34a; }
+        .wp-notice {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+        .wp-notice.success { background: #dcfce7; color: #16a34a; border: 1px solid #86efac; }
+        .wp-notice.error { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
+        .wp-notice.info { background: #dbeafe; color: #2563eb; border: 1px solid #93c5fd; }
+        @media (max-width: 768px) {
+            .wp-editor-wrapper { flex-direction: column; padding: 12px; }
+            .wp-editor-sidebar { flex: 1; }
+            .wp-editor-title { font-size: 1.5rem; }
+        }
+    </style>
 </head>
 <body>
     <header class="navbar">
@@ -27,90 +206,125 @@
         </div>
     </header>
 
-    <div class="dashboard-hero" style="background:#fff; padding:40px 0; border-bottom:1px solid #e9edf2;">
-        <div class="container">
-            <h1 style="font-size:2.2rem;">🛡️ Admin Dashboard</h1>
-            <p style="color:#64748b;">Manage your sports articles – create, edit, or delete content.</p>
-        </div>
-    </div>
+    <div style="background:#f8fafc; padding:20px 0; min-height:100vh;">
+        <div class="wp-editor-wrapper" id="editorWrapper">
 
-    <div class="container" style="padding:40px 0;">
-        <div class="dashboard-stats">
-            <div class="stat-card"><div class="num" id="totalArticles">0</div><div class="label">Total Articles</div></div>
-            <div class="stat-card"><div class="num">6</div><div class="label">Categories</div></div>
-            <div class="stat-card"><div class="num">0</div><div class="label">Pending Reviews</div></div>
-        </div>
+            <!-- ===== MAIN EDITOR ===== -->
+            <div class="wp-editor-main">
+                <div id="editorNotice" class="wp-notice info">
+                    <i class="fas fa-info-circle"></i> Welcome! Start writing your article below.
+                </div>
 
-        <!-- ARTICLE FORM -->
-        <div style="background:#fff; border-radius:24px; padding:32px; margin-bottom:40px; border:1px solid #e9edf2;">
-            <h3 id="formTitle" style="margin-bottom:16px;"><i class="fas fa-plus-circle" style="color:#f97316;"></i> Create New Article</h3>
-            <form id="articleForm" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
-                <input type="text" id="articleTitle" placeholder="Article Title" required style="padding:12px 16px; border-radius:12px; border:1.5px solid #e2e8f0; grid-column:1/-1;">
-                <input type="text" id="articleAuthor" placeholder="Author Name" required style="padding:12px 16px; border-radius:12px; border:1.5px solid #e2e8f0;">
-                <select id="articleCategory" required style="padding:12px 16px; border-radius:12px; border:1.5px solid #e2e8f0; background:#fff;">
-                    <option value="">Select category...</option>
-                    <option value="Football">Football</option>
-                    <option value="Basketball">Basketball</option>
-                    <option value="Cricket">Cricket</option>
-                    <option value="Tennis">Tennis</option>
-                    <option value="Motorsport">Motorsport</option>
-                    <option value="Golf">Golf</option>
-                </select>
+                <!-- Title -->
+                <input type="text" id="articleTitle" class="wp-editor-title" placeholder="Add title...">
+
+                <!-- Toolbar -->
+                <div class="wp-editor-toolbar">
+                    <button onclick="execCmd('bold')" title="Bold"><b>B</b></button>
+                    <button onclick="execCmd('italic')" title="Italic"><i>I</i></button>
+                    <button onclick="execCmd('underline')" title="Underline"><u>U</u></button>
+                    <button onclick="execCmd('strikethrough')" title="Strikethrough"><s>S</s></button>
+                    <span style="color:#94a3b8;">|</span>
+                    <button onclick="execCmd('insertUnorderedList')" title="Bullet List"><i class="fas fa-list-ul"></i></button>
+                    <button onclick="execCmd('insertOrderedList')" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                    <span style="color:#94a3b8;">|</span>
+                    <button onclick="execCmd('formatBlock','h2')" title="Heading 2">H2</button>
+                    <button onclick="execCmd('formatBlock','h3')" title="Heading 3">H3</button>
+                    <button onclick="execCmd('formatBlock','h4')" title="Heading 4">H4</button>
+                    <span style="color:#94a3b8;">|</span>
+                    <button onclick="execCmd('justifyLeft')" title="Align Left"><i class="fas fa-align-left"></i></button>
+                    <button onclick="execCmd('justifyCenter')" title="Align Center"><i class="fas fa-align-center"></i></button>
+                    <button onclick="execCmd('justifyRight')" title="Align Right"><i class="fas fa-align-right"></i></button>
+                    <span style="color:#94a3b8;">|</span>
+                    <button onclick="execCmd('createLink')" title="Insert Link"><i class="fas fa-link"></i></button>
+                    <button onclick="execCmd('unlink')" title="Remove Link"><i class="fas fa-unlink"></i></button>
+                    <span style="color:#94a3b8;">|</span>
+                    <button onclick="insertImageFromInput()" title="Insert Image"><i class="fas fa-image"></i> Image</button>
+                    <button onclick="toggleCodeView()" title="HTML"><i class="fas fa-code"></i></button>
+                </div>
+
+                <!-- Content -->
+                <div id="editorContent" class="wp-editor-content" contenteditable="true" spellcheck="true">
+                    <p>Start writing your article...</p>
+                </div>
+
+                <!-- Hidden field to store the image URL from upload -->
+                <input type="file" id="imageUploadInput" accept="image/*" style="display:none;">
+            </div>
+
+            <!-- ===== SIDEBAR ===== -->
+            <div class="wp-editor-sidebar">
+                <!-- Publish -->
+                <div class="card">
+                    <h4><i class="fas fa-cloud-upload-alt"></i> Publish</h4>
+                    <div style="margin-bottom:8px;">
+                        <label style="font-size:0.8rem; color:#64748b;">Status</label>
+                        <span class="status-badge draft" id="statusBadge">Draft</span>
+                    </div>
+                    <button id="publishBtn" class="btn-primary">
+                        <i class="fas fa-cloud-upload-alt"></i> Publish
+                    </button>
+                    <button id="updateBtn" class="btn-primary" style="background:#3b82f6; display:none; margin-top:8px;">
+                        <i class="fas fa-save"></i> Update
+                    </button>
+                    <button id="cancelEditBtn" style="background:none; border:none; color:#64748b; cursor:pointer; margin-top:8px; width:100%; text-decoration:underline; display:none;">
+                        Cancel Editing
+                    </button>
+                    <div id="publishMessage" style="margin-top:8px; font-weight:500; font-size:0.9rem;"></div>
+                </div>
+
+                <!-- Categories -->
+                <div class="card">
+                    <h4><i class="fas fa-tags"></i> Category</h4>
+                    <select id="articleCategory">
+                        <option value="">Select category...</option>
+                        <option value="Football">Football</option>
+                        <option value="Basketball">Basketball</option>
+                        <option value="Cricket">Cricket</option>
+                        <option value="Tennis">Tennis</option>
+                        <option value="Motorsport">Motorsport</option>
+                        <option value="Golf">Golf</option>
+                    </select>
+                </div>
+
                 <!-- Tags -->
-                <input type="text" id="articleTags" placeholder="Tags (comma separated, e.g. EPL, Messi)" style="padding:12px 16px; border-radius:12px; border:1.5px solid #e2e8f0;">
-                <div style="grid-column:1/-1; display:flex; flex-direction:column; gap:4px;">
-                    <label style="font-weight:600; font-size:0.9rem; color:#1e293b;">Publish Date</label>
-                    <input type="date" id="articleDate" style="padding:12px 16px; border-radius:12px; border:1.5px solid #e2e8f0;">
+                <div class="card">
+                    <h4><i class="fas fa-hashtag"></i> Tags</h4>
+                    <input type="text" id="articleTags" placeholder="EPL, Messi, Transfer">
+                    <small style="color:#94a3b8; font-size:0.75rem;">Comma separated</small>
                 </div>
-                <div style="grid-column:1/-1; display:flex; flex-direction:column; gap:4px;">
-                    <label style="font-weight:600; font-size:0.9rem; color:#1e293b;">Full Article Content</label>
-                    <textarea id="articleContent" placeholder="Write your full article here..." rows="15" style="padding:12px 16px; border-radius:12px; border:1.5px solid #e2e8f0; font-family:inherit; resize:vertical; min-height:300px;"></textarea>
-                    <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-                        <!-- 🔥 Hidden file input for insert image -->
-                        <input type="file" id="insertImageInput" accept="image/*" style="display:none;">
-                        <button type="button" id="addImageBtn" style="padding:8px 16px; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:40px; cursor:pointer; font-size:0.9rem;">
-                            <i class="fas fa-image"></i> Insert Image
-                        </button>
-                        <span style="color:#94a3b8; font-size:0.85rem;">Upload and insert image at cursor position</span>
-                    </div>
-                    <small style="color:#64748b;">Click "Insert Image" to upload and embed an image exactly where your cursor is.</small>
-                </div>
-                <div style="grid-column:1/-1; display:flex; flex-direction:column; gap:4px;">
-                    <label style="font-weight:600; font-size:0.9rem; color:#1e293b;">Short Summary (Excerpt)</label>
-                    <textarea id="articleSummary" placeholder="Short summary for homepage preview" rows="2" style="padding:12px 16px; border-radius:12px; border:1.5px solid #e2e8f0; font-family:inherit; resize:vertical;"></textarea>
-                </div>
-                <div style="grid-column:1/-1; display:flex; flex-direction:column; gap:8px;">
-                    <label style="font-weight:600; font-size:0.9rem; color:#1e293b;">Featured Image</label>
-                    <input type="file" id="articleImageFile" accept="image/*" style="padding:8px; border:1.5px dashed #e2e8f0; border-radius:12px;">
-                    <div id="imagePreviewContainer" style="display:none; margin-top:8px;">
-                        <img id="imagePreview" src="#" alt="Preview" style="max-width:150px; max-height:150px; border-radius:12px; border:1px solid #e2e8f0;">
-                        <button type="button" id="removeImageBtn" style="display:block; margin-top:4px; background:none; border:none; color:#ef4444; cursor:pointer;">Remove Image</button>
-                    </div>
-                </div>
-                <input type="hidden" id="articleImageUrl" value="">
-                <button type="submit" id="submitBtn" class="btn-primary" style="grid-column:1/-1; justify-content:center; padding:14px; border-radius:60px; border:none; cursor:pointer;">
-                    <i class="fas fa-cloud-upload-alt"></i> Publish Article
-                </button>
-                <button type="button" id="cancelEditBtn" style="grid-column:1/-1; background:none; border:none; color:#64748b; cursor:pointer; display:none; text-decoration:underline;">Cancel Editing</button>
-            </form>
-            <div id="formMessage" style="margin-top:12px; font-weight:500;"></div>
-        </div>
 
-        <!-- MANAGE ARTICLES -->
-        <div style="background:#fff; border-radius:24px; padding:32px; border:1px solid #e9edf2;">
-            <h3 style="margin-bottom:20px;"><i class="fas fa-list-ul" style="color:#f97316;"></i> Manage Articles</h3>
-            <div style="overflow-x:auto;">
-                <table style="width:100%; border-collapse:collapse; font-size:0.95rem;">
-                    <thead style="background:#f8fafc; text-align:left;">
-                        <tr>
-                            <th style="padding:12px 16px;">Title</th>
-                            <th style="padding:12px 16px;">Category</th>
-                            <th style="padding:12px 16px;">Author</th>
-                            <th style="padding:12px 16px; text-align:center;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="adminArticleList"><tr><td colspan="4" style="text-align:center; padding:40px; color:#94a3b8;">Loading articles...</td></tr></tbody>
-                </table>
+                <!-- Date -->
+                <div class="card">
+                    <h4><i class="fas fa-calendar-alt"></i> Publish Date</h4>
+                    <input type="date" id="articleDate">
+                </div>
+
+                <!-- Featured Image -->
+                <div class="card">
+                    <h4><i class="fas fa-image"></i> Featured Image</h4>
+                    <input type="file" id="featuredImageInput" accept="image/*" class="file-input">
+                    <div id="featuredPreviewContainer" style="display:none; margin-top:8px;">
+                        <img id="featuredPreview" src="#" alt="Featured" class="preview-img">
+                        <button id="removeFeaturedBtn" class="remove-btn"><i class="fas fa-times-circle"></i> Remove</button>
+                    </div>
+                    <input type="hidden" id="featuredImageUrl" value="">
+                </div>
+
+                <!-- Excerpt -->
+                <div class="card">
+                    <h4><i class="fas fa-align-left"></i> Excerpt</h4>
+                    <textarea id="articleExcerpt" placeholder="Short summary for homepage..."></textarea>
+                    <small style="color:#94a3b8; font-size:0.75rem;">Max 150 characters</small>
+                </div>
+
+                <!-- Manage Articles -->
+                <div class="card" style="padding:16px;">
+                    <h4><i class="fas fa-list-ul"></i> Your Articles</h4>
+                    <div id="articleList" style="max-height:300px; overflow-y:auto; font-size:0.85rem;">
+                        <span style="color:#94a3b8;">Loading...</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -118,204 +332,328 @@
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
     <script>
-        if (!isAdmin()) window.location.href = 'login.html';
+        // ============================================================
+        //  WORDPRESS-STYLE EDITOR – FULL FUNCTIONALITY
+        // ============================================================
 
+        // ---------- GLOBALS ----------
         let editingId = null;
-        let currentImageFile = null;
+        let currentFeaturedFile = null;
+        let isCodeView = false;
 
-        function getTodayDate() {
-            return new Date().toISOString().split('T')[0];
-        }
+        // ---------- DOM REFS ----------
+        const content = document.getElementById('editorContent');
+        const title = document.getElementById('articleTitle');
+        const category = document.getElementById('articleCategory');
+        const tags = document.getElementById('articleTags');
+        const excerpt = document.getElementById('articleExcerpt');
+        const date = document.getElementById('articleDate');
+        const featuredInput = document.getElementById('featuredImageInput');
+        const featuredPreview = document.getElementById('featuredPreview');
+        const featuredPreviewContainer = document.getElementById('featuredPreviewContainer');
+        const featuredUrl = document.getElementById('featuredImageUrl');
+        const removeFeaturedBtn = document.getElementById('removeFeaturedBtn');
+        const publishBtn = document.getElementById('publishBtn');
+        const updateBtn = document.getElementById('updateBtn');
+        const cancelBtn = document.getElementById('cancelEditBtn');
+        const statusBadge = document.getElementById('statusBadge');
+        const publishMsg = document.getElementById('publishMessage');
+        const notice = document.getElementById('editorNotice');
 
-        function resetForm() {
-            document.getElementById('articleForm').reset();
-            document.getElementById('articleImageUrl').value = '';
-            document.getElementById('imagePreviewContainer').style.display = 'none';
-            document.getElementById('imagePreview').src = '#';
-            currentImageFile = null;
-            document.getElementById('submitBtn').innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Publish Article';
-            document.getElementById('formTitle').innerHTML = '<i class="fas fa-plus-circle" style="color:#f97316;"></i> Create New Article';
-            document.getElementById('cancelEditBtn').style.display = 'none';
-            editingId = null;
-            document.getElementById('formMessage').innerHTML = '';
-            document.getElementById('articleCategory').value = '';
-            document.getElementById('articleDate').value = getTodayDate();
-            document.getElementById('articleTags').value = '';
-        }
-
-        window.editArticle = function(id) {
-            getArticles().then(articles => {
-                const article = articles.find(a => a.id === id);
-                if (!article) return alert('Article not found.');
-                document.getElementById('articleTitle').value = article.title || '';
-                document.getElementById('articleAuthor').value = article.author || '';
-                document.getElementById('articleSummary').value = article.summary || '';
-                document.getElementById('articleContent').value = article.content || article.summary || '';
-                document.getElementById('articleCategory').value = article.category || '';
-                document.getElementById('articleTags').value = (article.tags || []).join(', ');
-                if (article.date) document.getElementById('articleDate').value = article.date;
-                else document.getElementById('articleDate').value = getTodayDate();
-                if (article.image) {
-                    document.getElementById('articleImageUrl').value = article.image;
-                    document.getElementById('imagePreview').src = article.image;
-                    document.getElementById('imagePreviewContainer').style.display = 'block';
-                    currentImageFile = null;
-                } else {
-                    document.getElementById('imagePreviewContainer').style.display = 'none';
-                    document.getElementById('articleImageUrl').value = '';
-                }
-                document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save"></i> Update Article';
-                document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit" style="color:#f97316;"></i> Edit Article';
-                document.getElementById('cancelEditBtn').style.display = 'inline-block';
-                document.getElementById('formMessage').innerHTML = '';
-                editingId = id;
-                document.querySelector('.dashboard-hero').scrollIntoView({ behavior: 'smooth' });
-            }).catch(err => alert('Error loading article: ' + err.message));
+        // ---------- TOOLBAR COMMANDS ----------
+        window.execCmd = function(command, value = null) {
+            if (isCodeView) return;
+            if (command === 'createLink') {
+                const url = prompt('Enter the URL:', 'https://');
+                if (url) document.execCommand('createLink', false, url);
+            } else if (command === 'formatBlock') {
+                document.execCommand(command, false, value);
+            } else {
+                document.execCommand(command, false, value);
+            }
+            content.focus();
         };
 
-        // 🔥 INSERT IMAGE – using hidden input
-        const insertInput = document.getElementById('insertImageInput');
-        document.getElementById('addImageBtn').addEventListener('click', function() {
-            insertInput.click();
-        });
+        // ---------- IMAGE INSERT (from toolbar) ----------
+        window.insertImageFromInput = function() {
+            const input = document.getElementById('imageUploadInput');
+            input.click();
+        };
 
-        insertInput.addEventListener('change', async function(e) {
+        document.getElementById('imageUploadInput').addEventListener('change', async function(e) {
             const file = e.target.files[0];
             if (!file) return;
-            if (file.size > 5*1024*1024) {
+            if (file.size > 5 * 1024 * 1024) {
                 alert('Image too large. Max 5MB.');
                 this.value = '';
                 return;
             }
-            const msgDiv = document.getElementById('formMessage');
-            msgDiv.innerHTML = '<span style="color:#f97316;">⏳ Uploading image...</span>';
+            showNotice('⏳ Uploading image...', 'info');
             try {
                 const url = await uploadImage(file);
                 if (url) {
-                    const textarea = document.getElementById('articleContent');
-                    const start = textarea.selectionStart;
-                    const end = textarea.selectionEnd;
-                    const imgTag = `<img src="${url}" alt="Image" style="max-width:100%; margin:16px 0;">`;
-                    const text = textarea.value;
-                    textarea.value = text.substring(0, start) + imgTag + text.substring(end);
-                    textarea.selectionStart = textarea.selectionEnd = start + imgTag.length;
-                    textarea.focus();
-                    msgDiv.innerHTML = '<span style="color:#16a34a;">✅ Image inserted!</span>';
-                    setTimeout(() => msgDiv.innerHTML = '', 3000);
+                    const imgHtml = `<img src="${url}" alt="Image" style="max-width:100%; margin:16px 0;">`;
+                    document.execCommand('insertHTML', false, imgHtml);
+                    showNotice('✅ Image inserted!', 'success');
+                    setTimeout(() => hideNotice(), 3000);
                 }
             } catch(err) {
-                msgDiv.innerHTML = `<span style="color:#dc2626;">❌ Upload failed: ${err.message}</span>`;
-                console.error('Insert image error:', err);
+                showNotice('❌ Upload failed: ' + err.message, 'error');
             }
-            this.value = ''; // reset so same file can be re-selected
+            this.value = '';
         });
 
-        // Featured image preview
-        document.getElementById('articleImageFile').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                if (file.size > 5*1024*1024) {
-                    alert('Image too large. Max 5MB.');
-                    this.value = '';
-                    return;
-                }
-                currentImageFile = file;
-                const reader = new FileReader();
-                reader.onload = function(ev) {
-                    document.getElementById('imagePreview').src = ev.target.result;
-                    document.getElementById('imagePreviewContainer').style.display = 'block';
-                };
-                reader.readAsDataURL(file);
-                document.getElementById('articleImageUrl').value = '';
+        // ---------- CODE VIEW TOGGLE ----------
+        window.toggleCodeView = function() {
+            isCodeView = !isCodeView;
+            if (isCodeView) {
+                // Switch to raw HTML
+                content.innerText = content.innerHTML;
+                content.style.fontFamily = 'monospace';
+                content.style.whiteSpace = 'pre-wrap';
             } else {
-                currentImageFile = null;
-                document.getElementById('imagePreviewContainer').style.display = 'none';
+                // Switch back to rich text
+                const raw = content.innerText;
+                content.innerHTML = raw;
+                content.style.fontFamily = '';
+                content.style.whiteSpace = '';
             }
-        });
-        document.getElementById('removeImageBtn').addEventListener('click', function() {
-            document.getElementById('articleImageFile').value = '';
-            document.getElementById('imagePreviewContainer').style.display = 'none';
-            document.getElementById('imagePreview').src = '#';
-            document.getElementById('articleImageUrl').value = '';
-            currentImageFile = null;
-        });
-        document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
+        };
 
-        async function renderAdminTable() {
-            const tbody = document.getElementById('adminArticleList');
+        // ---------- FEATURED IMAGE ----------
+        featuredInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Image too large. Max 5MB.');
+                this.value = '';
+                return;
+            }
+            currentFeaturedFile = file;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                featuredPreview.src = ev.target.result;
+                featuredPreviewContainer.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+            featuredUrl.value = '';
+        });
+
+        removeFeaturedBtn.addEventListener('click', function() {
+            featuredInput.value = '';
+            featuredPreviewContainer.style.display = 'none';
+            featuredPreview.src = '#';
+            featuredUrl.value = '';
+            currentFeaturedFile = null;
+        });
+
+        // ---------- NOTICE HELPER ----------
+        function showNotice(msg, type = 'info') {
+            notice.className = 'wp-notice ' + type;
+            notice.innerHTML = msg;
+        }
+
+        function hideNotice() {
+            notice.style.display = 'none';
+        }
+
+        // ---------- DATE ----------
+        function getTodayDate() {
+            return new Date().toISOString().split('T')[0];
+        }
+        date.value = getTodayDate();
+
+        // ---------- RESET FORM ----------
+        function resetForm() {
+            title.value = '';
+            content.innerHTML = '<p>Start writing your article...</p>';
+            category.value = '';
+            tags.value = '';
+            excerpt.value = '';
+            date.value = getTodayDate();
+            featuredInput.value = '';
+            featuredPreviewContainer.style.display = 'none';
+            featuredPreview.src = '#';
+            featuredUrl.value = '';
+            currentFeaturedFile = null;
+            editingId = null;
+            publishBtn.style.display = 'block';
+            updateBtn.style.display = 'none';
+            cancelBtn.style.display = 'none';
+            statusBadge.className = 'status-badge draft';
+            statusBadge.textContent = 'Draft';
+            publishMsg.innerHTML = '';
+            showNotice('🆕 New article ready. Start writing!', 'info');
+            setTimeout(hideNotice, 4000);
+        }
+
+        // ---------- LOAD ARTICLE FOR EDIT ----------
+        window.editArticle = async function(id) {
+            try {
+                const articles = await getArticles();
+                const article = articles.find(a => a.id === id);
+                if (!article) return alert('Article not found.');
+
+                editingId = id;
+                title.value = article.title || '';
+                content.innerHTML = article.content || article.summary || '<p>Start writing...</p>';
+                category.value = article.category || '';
+                tags.value = (article.tags || []).join(', ');
+                excerpt.value = article.summary || '';
+                date.value = article.date || getTodayDate();
+
+                if (article.image) {
+                    featuredUrl.value = article.image;
+                    featuredPreview.src = article.image;
+                    featuredPreviewContainer.style.display = 'block';
+                    currentFeaturedFile = null;
+                } else {
+                    featuredPreviewContainer.style.display = 'none';
+                    featuredUrl.value = '';
+                }
+
+                publishBtn.style.display = 'none';
+                updateBtn.style.display = 'block';
+                cancelBtn.style.display = 'block';
+                statusBadge.className = 'status-badge published';
+                statusBadge.textContent = 'Published';
+                publishMsg.innerHTML = '';
+                showNotice(`✏️ Editing: "${article.title}"`, 'info');
+                setTimeout(hideNotice, 3000);
+
+                // Scroll to top
+                document.querySelector('.wp-editor-wrapper').scrollIntoView({ behavior: 'smooth' });
+            } catch(err) {
+                alert('Error loading article: ' + err.message);
+            }
+        };
+
+        // ---------- CANCEL EDIT ----------
+        cancelBtn.addEventListener('click', resetForm);
+
+        // ---------- PUBLISH / UPDATE ----------
+        async function saveArticle(isUpdate = false) {
+            const titleVal = title.value.trim();
+            const categoryVal = category.value.trim();
+            const excerptVal = excerpt.value.trim() || 'No summary provided.';
+            const contentVal = content.innerHTML.trim() || excerptVal;
+            const tagsVal = tags.value.split(',').map(t => t.trim()).filter(Boolean);
+            const dateVal = date.value || getTodayDate();
+            let imageUrl = featuredUrl.value;
+
+            if (!titleVal || !categoryVal) {
+                showNotice('❌ Please fill in Title and Category.', 'error');
+                return;
+            }
+
+            publishBtn.disabled = true;
+            updateBtn.disabled = true;
+            publishMsg.innerHTML = '⏳ Saving...';
+
+            try {
+                // Upload featured image if new one selected
+                if (currentFeaturedFile) {
+                    const url = await uploadImage(currentFeaturedFile);
+                    if (url) imageUrl = url;
+                }
+                if (!imageUrl) imageUrl = 'https://picsum.photos/seed/sports/600/400';
+
+                let result;
+                if (isUpdate) {
+                    result = await updateArticle(editingId, {
+                        title: titleVal,
+                        content: contentVal,
+                        summary: excerptVal,
+                        category: categoryVal,
+                        author: 'Admin',
+                        image: imageUrl,
+                        date: dateVal,
+                        tags: tagsVal
+                    });
+                } else {
+                    result = await addArticle({
+                        title: titleVal,
+                        content: contentVal,
+                        summary: excerptVal,
+                        category: categoryVal,
+                        author: 'Admin',
+                        image: imageUrl,
+                        date: dateVal,
+                        tags: tagsVal
+                    });
+                }
+
+                if (result.success) {
+                    showNotice(`✅ Article ${isUpdate ? 'updated' : 'published'} successfully!`, 'success');
+                    statusBadge.className = 'status-badge published';
+                    statusBadge.textContent = 'Published';
+                    if (!isUpdate) resetForm();
+                    await refreshArticleList();
+                    if (window.loadAndRender) window.loadAndRender();
+                    setTimeout(hideNotice, 4000);
+                } else {
+                    showNotice('❌ Failed: ' + result.error, 'error');
+                }
+            } catch(err) {
+                showNotice('❌ Error: ' + err.message, 'error');
+            }
+
+            publishBtn.disabled = false;
+            updateBtn.disabled = false;
+            publishMsg.innerHTML = '';
+        }
+
+        publishBtn.addEventListener('click', () => saveArticle(false));
+        updateBtn.addEventListener('click', () => saveArticle(true));
+
+        // ---------- REFRESH ARTICLE LIST ----------
+        async function refreshArticleList() {
+            const list = document.getElementById('articleList');
             try {
                 const articles = await getArticles();
                 if (articles.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:40px; color:#94a3b8;">No articles yet.</td></tr>';
+                    list.innerHTML = '<span style="color:#94a3b8;">No articles yet.</span>';
                 } else {
-                    tbody.innerHTML = articles.map(a => `
-                        <tr style="border-bottom:1px solid #f1f5f9;">
-                            <td style="padding:12px 16px; font-weight:600;">${a.title}</td>
-                            <td style="padding:12px 16px;"><span style="background:#f1f5f9; padding:4px 12px; border-radius:40px; font-size:0.8rem;">${a.category}</span></td>
-                            <td style="padding:12px 16px;">${a.author}</td>
-                            <td style="padding:12px 16px; text-align:center;">
-                                <button onclick="editArticle('${a.id}')" style="background:none; border:none; color:#3b82f6; cursor:pointer; margin-right:8px;"><i class="fas fa-edit"></i></button>
-                                <button onclick="deleteArticle('${a.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer;"><i class="fas fa-trash"></i></button>
-                            </td>
-                        </tr>
+                    list.innerHTML = articles.map(a => `
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #f1f5f9;">
+                            <span style="cursor:pointer; color:#0b1a2e;" onclick="editArticle('${a.id}')">${a.title}</span>
+                            <button onclick="deleteArticle('${a.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:0.8rem;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     `).join('');
                 }
-                document.getElementById('totalArticles').textContent = articles.length;
             } catch(e) {
-                console.error('renderAdminTable error:', e);
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:40px; color:#ef4444;">❌ Error loading articles: ${e.message}</td></tr>`;
-                document.getElementById('totalArticles').textContent = '?';
+                list.innerHTML = '<span style="color:#ef4444;">❌ Error loading articles</span>';
             }
         }
 
+        // ---------- DELETE ----------
         window.deleteArticle = async function(id) {
-            if (!confirm('Delete permanently?')) return;
+            if (!confirm('Delete this article permanently?')) return;
             const result = await deleteArticleById(id);
             if (result.success) {
-                alert('Deleted!');
+                alert('🗑️ Deleted!');
                 if (editingId === id) resetForm();
-                await renderAdminTable();
+                await refreshArticleList();
                 if (window.loadAndRender) window.loadAndRender();
             } else {
                 alert('Delete failed: ' + result.error);
             }
         };
 
-        document.getElementById('articleForm').addEventListener('submit', async function(e) {
+        // ---------- LOGOUT ----------
+        document.getElementById('dashboardLogout').addEventListener('click', function(e) {
             e.preventDefault();
-            const title = document.getElementById('articleTitle').value.trim();
-            const author = document.getElementById('articleAuthor').value.trim();
-            const category = document.getElementById('articleCategory').value.trim();
-            const summary = document.getElementById('articleSummary').value.trim() || 'No summary.';
-            const content = document.getElementById('articleContent').value.trim() || summary;
-            let imageUrl = document.getElementById('articleImageUrl').value;
-            const date = document.getElementById('articleDate').value || getTodayDate();
-            const tags = document.getElementById('articleTags').value.split(',').map(t => t.trim()).filter(Boolean);
+            adminLogout();
+        });
 
-            const msgDiv = document.getElementById('formMessage');
-            if (!title || !author || !category) {
-                msgDiv.innerHTML = '<span style="color:#dc2626;">❌ Please fill in Title, Author, Category.</span>';
-                return;
-            }
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-            try {
-                if (currentImageFile) {
-                    msgDiv.innerHTML = '<span style="color:#f97316;">⏳ Uploading featured image...</span>';
-                    const url = await uploadImage(currentImageFile);
-                    if (url) imageUrl = url;
-                }
-                if (!imageUrl) imageUrl = 'https://picsum.photos/seed/sports/600/400';
-
-                let result;
-                if (editingId) {
-                    result = await updateArticle(editingId, { title, author, category, image: imageUrl, summary, content, date, tags });
-                } else {
-                    result = await addArticle({ title, author, category, image: imageUrl, summary, content, date, tags });
-                }
-                if (result.success) {
-                    msgDiv.innerHTML = `<span style="color:#16a34a;">✅ Article ${editingId ? 'updated' : 'published'}!</span>`;
-                    resetForm();
-                    await renderAdminTable();
-                    if (window.loadAndRender) window.loadAnd
+        // ---------- INIT ----------
+        async function init() {
+            await refreshArticleList();
+            resetForm();
+        }
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

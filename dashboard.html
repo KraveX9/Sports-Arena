@@ -14,225 +14,47 @@
     <script>eruda.init();</script>
 
     <style>
-        .wp-editor-wrapper {
-            display: flex;
-            gap: 32px;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 24px;
-        }
-        .wp-editor-main {
-            flex: 2;
-            min-width: 0;
-        }
-        .wp-editor-sidebar {
-            flex: 1;
-            min-width: 220px;
-        }
-        .wp-editor-sidebar .card {
-            background: #fff;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-        }
-        .wp-editor-sidebar .card h4 {
-            font-size: 0.85rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #64748b;
-            margin-bottom: 12px;
-        }
-        .wp-editor-sidebar input[type="text"],
-        .wp-editor-sidebar select {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            margin-bottom: 8px;
-        }
-        .wp-editor-sidebar textarea {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            resize: vertical;
-            min-height: 80px;
-            font-family: inherit;
-        }
-        .wp-editor-sidebar .btn-primary {
-            width: 100%;
-            justify-content: center;
-            padding: 12px;
-            border-radius: 40px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            background: #f97316;
-            color: #fff;
-        }
-        .wp-editor-sidebar .btn-primary:hover {
-            background: #ea580c;
-        }
-        .wp-editor-sidebar .btn-primary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        .wp-editor-sidebar .preview-img {
-            max-width: 100%;
-            border-radius: 8px;
-            margin-top: 8px;
-            border: 1px solid #e2e8f0;
-        }
-        .wp-editor-sidebar .remove-btn {
-            background: none;
-            border: none;
-            color: #ef4444;
-            cursor: pointer;
-            font-size: 0.8rem;
-            margin-top: 4px;
-        }
-        .wp-editor-sidebar .file-input {
-            padding: 8px;
-            border: 1.5px dashed #e2e8f0;
-            border-radius: 8px;
-            width: 100%;
-            font-size: 0.85rem;
-        }
-        .wp-editor-toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            padding: 12px 16px;
-            background: #f8fafc;
-            border: 1.5px solid #e2e8f0;
-            border-bottom: none;
-            border-radius: 12px 12px 0 0;
-        }
-        .wp-editor-toolbar button {
-            background: #fff;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            padding: 6px 12px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: 0.2s;
-            color: #1e293b;
-            font-weight: 500;
-        }
-        .wp-editor-toolbar button:hover {
-            background: #f1f5f9;
-            border-color: #94a3b8;
-        }
-        .wp-editor-toolbar button i {
-            margin-right: 4px;
-        }
-        .wp-editor-toolbar .format-btn {
-            background: #f97316;
-            color: #fff;
-            border-color: #f97316;
-        }
-        .wp-editor-toolbar .format-btn:hover {
-            background: #ea580c;
-            border-color: #ea580c;
-        }
-        .wp-editor-toolbar .image-btn {
-            background: #e0f2fe;
-            border-color: #7dd3fc;
-        }
-        .wp-editor-toolbar .image-btn:hover {
-            background: #bae6fd;
-        }
-        .wp-editor-toolbar .caption-btn {
-            background: #fef3c7;
-            border-color: #f59e0b;
-        }
-        .wp-editor-toolbar .caption-btn:hover {
-            background: #fde68a;
-        }
-        .wp-editor-content {
-            border: 1.5px solid #e2e8f0;
-            border-radius: 0 0 12px 12px;
-            background: #fff;
-            min-height: 400px;
-            padding: 16px;
-            font-family: 'Inter', sans-serif;
-        }
-        .wp-editor-content:focus {
-            outline: none;
-            border-color: #f97316;
-        }
-        .wp-editor-content h2 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            margin: 16px 0 8px;
-        }
-        .wp-editor-content h3 {
-            font-size: 1.4rem;
-            font-weight: 700;
-            margin: 14px 0 6px;
-        }
-        .wp-editor-content h4 {
-            font-size: 1.2rem;
-            font-weight: 700;
-            margin: 12px 0 4px;
-        }
-        .wp-editor-content figure {
-            margin: 20px 0;
-            text-align: center;
-        }
-        .wp-editor-content figure img {
-            max-width: 100%;
-            border-radius: 12px;
-        }
-        .wp-editor-content figure figcaption {
-            font-size: 0.9rem;
-            color: #64748b;
-            margin-top: 8px;
-            font-style: italic;
-        }
-        .wp-editor-title {
-            font-size: 2rem;
-            font-weight: 700;
-            border: none;
-            border-bottom: 2px solid transparent;
-            padding: 8px 0;
-            width: 100%;
-            margin-bottom: 16px;
-            background: transparent;
-            color: #0b1a2e;
-        }
-        .wp-editor-title:focus {
-            outline: none;
-            border-bottom-color: #f97316;
-        }
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 40px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin-top: 8px;
-        }
+        .wp-editor-wrapper { display: flex; gap: 32px; max-width: 1200px; margin: 0 auto; padding: 24px; }
+        .wp-editor-main { flex: 2; min-width: 0; }
+        .wp-editor-sidebar { flex: 1; min-width: 220px; }
+        .wp-editor-sidebar .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .wp-editor-sidebar .card h4 { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 12px; }
+        .wp-editor-sidebar input[type="text"], .wp-editor-sidebar select { width: 100%; padding: 8px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; margin-bottom: 8px; }
+        .wp-editor-sidebar textarea { width: 100%; padding: 8px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; resize: vertical; min-height: 80px; font-family: inherit; }
+        .wp-editor-sidebar .btn-primary { width: 100%; justify-content: center; padding: 12px; border-radius: 40px; border: none; font-weight: 600; cursor: pointer; background: #f97316; color: #fff; }
+        .wp-editor-sidebar .btn-primary:hover { background: #ea580c; }
+        .wp-editor-sidebar .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+        .wp-editor-sidebar .preview-img { max-width: 100%; border-radius: 8px; margin-top: 8px; border: 1px solid #e2e8f0; }
+        .wp-editor-sidebar .remove-btn { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.8rem; margin-top: 4px; }
+        .wp-editor-sidebar .file-input { padding: 8px; border: 1.5px dashed #e2e8f0; border-radius: 8px; width: 100%; font-size: 0.85rem; }
+        .wp-editor-toolbar { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 16px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-bottom: none; border-radius: 12px 12px 0 0; }
+        .wp-editor-toolbar button { background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 12px; font-size: 0.85rem; cursor: pointer; transition: 0.2s; color: #1e293b; font-weight: 500; }
+        .wp-editor-toolbar button:hover { background: #f1f5f9; border-color: #94a3b8; }
+        .wp-editor-toolbar button i { margin-right: 4px; }
+        .wp-editor-toolbar .format-btn { background: #f97316; color: #fff; border-color: #f97316; }
+        .wp-editor-toolbar .format-btn:hover { background: #ea580c; border-color: #ea580c; }
+        .wp-editor-toolbar .image-btn { background: #e0f2fe; border-color: #7dd3fc; }
+        .wp-editor-toolbar .image-btn:hover { background: #bae6fd; }
+        .wp-editor-toolbar .caption-btn { background: #fef3c7; border-color: #f59e0b; }
+        .wp-editor-toolbar .caption-btn:hover { background: #fde68a; }
+        .wp-editor-content { border: 1.5px solid #e2e8f0; border-radius: 0 0 12px 12px; background: #fff; min-height: 400px; padding: 16px; font-family: 'Inter', sans-serif; }
+        .wp-editor-content:focus { outline: none; border-color: #f97316; }
+        .wp-editor-content h2 { font-size: 1.8rem; font-weight: 700; margin: 16px 0 8px; }
+        .wp-editor-content h3 { font-size: 1.4rem; font-weight: 700; margin: 14px 0 6px; }
+        .wp-editor-content h4 { font-size: 1.2rem; font-weight: 700; margin: 12px 0 4px; }
+        .wp-editor-content figure { margin: 20px 0; text-align: center; }
+        .wp-editor-content figure img { max-width: 100%; border-radius: 12px; }
+        .wp-editor-content figure figcaption { font-size: 0.9rem; color: #64748b; margin-top: 8px; font-style: italic; }
+        .wp-editor-title { font-size: 2rem; font-weight: 700; border: none; border-bottom: 2px solid transparent; padding: 8px 0; width: 100%; margin-bottom: 16px; background: transparent; color: #0b1a2e; }
+        .wp-editor-title:focus { outline: none; border-bottom-color: #f97316; }
+        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 40px; font-size: 0.75rem; font-weight: 600; margin-top: 8px; }
         .status-badge.draft { background: #f1f5f9; color: #475569; }
         .status-badge.published { background: #dcfce7; color: #16a34a; }
-        .wp-notice {
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-bottom: 16px;
-            font-weight: 500;
-        }
+        .wp-notice { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-weight: 500; }
         .wp-notice.success { background: #dcfce7; color: #16a34a; border: 1px solid #86efac; }
         .wp-notice.error { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
         .wp-notice.info { background: #dbeafe; color: #2563eb; border: 1px solid #93c5fd; }
-        @media (max-width: 768px) {
-            .wp-editor-wrapper { flex-direction: column; padding: 12px; }
-            .wp-editor-sidebar { flex: 1; }
-            .wp-editor-title { font-size: 1.5rem; }
-        }
+        @media (max-width: 768px) { .wp-editor-wrapper { flex-direction: column; padding: 12px; } .wp-editor-sidebar { flex: 1; } .wp-editor-title { font-size: 1.5rem; } }
     </style>
 </head>
 <body>
@@ -255,50 +77,48 @@
     <div style="background:#f8fafc; padding:20px 0; min-height:100vh;">
         <div class="wp-editor-wrapper">
 
-            <!-- ===== MAIN EDITOR ===== -->
+            <!-- MAIN EDITOR -->
             <div class="wp-editor-main">
                 <div id="editorNotice" class="wp-notice info">
-                    <i class="fas fa-info-circle"></i> Click <strong>"Image"</strong> for a plain image, or <strong>"Image + Caption"</strong> for an image with a caption.
+                    <i class="fas fa-info-circle"></i> Paste Markdown, then click <strong>"Format"</strong> to style it. Click <strong>"Image + Caption"</strong> to add an image with a caption.
                 </div>
 
                 <input type="text" id="articleTitle" class="wp-editor-title" placeholder="Add title...">
 
                 <div class="wp-editor-toolbar">
-                    <button onclick="execCmd('bold')" title="Bold"><b>B</b></button>
-                    <button onclick="execCmd('italic')" title="Italic"><i>I</i></button>
-                    <button onclick="execCmd('underline')" title="Underline"><u>U</u></button>
-                    <button onclick="execCmd('strikethrough')" title="Strikethrough"><s>S</s></button>
+                    <button id="boldBtn"><b>B</b></button>
+                    <button id="italicBtn"><i>I</i></button>
+                    <button id="underlineBtn"><u>U</u></button>
+                    <button id="strikeBtn"><s>S</s></button>
                     <span style="color:#94a3b8;">|</span>
-                    <button onclick="execCmd('insertUnorderedList')" title="Bullet List"><i class="fas fa-list-ul"></i></button>
-                    <button onclick="execCmd('insertOrderedList')" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                    <button id="ulBtn"><i class="fas fa-list-ul"></i></button>
+                    <button id="olBtn"><i class="fas fa-list-ol"></i></button>
                     <span style="color:#94a3b8;">|</span>
-                    <button onclick="formatHeading(2)" title="Heading 2">H2</button>
-                    <button onclick="formatHeading(3)" title="Heading 3">H3</button>
-                    <button onclick="formatHeading(4)" title="Heading 4">H4</button>
+                    <button id="h2Btn">H2</button>
+                    <button id="h3Btn">H3</button>
+                    <button id="h4Btn">H4</button>
                     <span style="color:#94a3b8;">|</span>
-                    <button onclick="execCmd('justifyLeft')" title="Align Left"><i class="fas fa-align-left"></i></button>
-                    <button onclick="execCmd('justifyCenter')" title="Align Center"><i class="fas fa-align-center"></i></button>
-                    <button onclick="execCmd('justifyRight')" title="Align Right"><i class="fas fa-align-right"></i></button>
+                    <button id="alignLeft"><i class="fas fa-align-left"></i></button>
+                    <button id="alignCenter"><i class="fas fa-align-center"></i></button>
+                    <button id="alignRight"><i class="fas fa-align-right"></i></button>
                     <span style="color:#94a3b8;">|</span>
-                    <button onclick="execCmd('createLink')" title="Insert Link"><i class="fas fa-link"></i></button>
-                    <button onclick="execCmd('unlink')" title="Remove Link"><i class="fas fa-unlink"></i></button>
+                    <button id="linkBtn"><i class="fas fa-link"></i></button>
+                    <button id="unlinkBtn"><i class="fas fa-unlink"></i></button>
                     <span style="color:#94a3b8;">|</span>
-                    <!-- 🔥 IMAGE BUTTONS with IDs for JavaScript listeners -->
-                    <button id="imageOnlyBtn" class="image-btn" title="Insert Image only"><i class="fas fa-image"></i> Image</button>
-                    <button id="imageCaptionBtn" class="caption-btn" title="Insert Image with Caption"><i class="fas fa-image"></i> + Caption</button>
+                    <button id="imageOnlyBtn" class="image-btn"><i class="fas fa-image"></i> Image</button>
+                    <button id="imageCaptionBtn" class="caption-btn"><i class="fas fa-image"></i> + Caption</button>
                     <span style="color:#94a3b8;">|</span>
-                    <button onclick="formatContent()" class="format-btn" title="Format Markdown"><i class="fas fa-magic"></i> Format</button>
+                    <button id="formatBtn" class="format-btn"><i class="fas fa-magic"></i> Format</button>
                 </div>
 
                 <div id="editorContent" class="wp-editor-content" contenteditable="true" spellcheck="true">
                     <p>Start writing your article...</p>
                 </div>
 
-                <!-- Hidden file input for image upload -->
                 <input type="file" id="imageUploadInput" accept="image/*" style="display:none;">
             </div>
 
-            <!-- ===== SIDEBAR ===== -->
+            <!-- SIDEBAR -->
             <div class="wp-editor-sidebar">
                 <div class="card">
                     <h4><i class="fas fa-cloud-upload-alt"></i> Publish</h4>
@@ -317,7 +137,6 @@
                     </button>
                     <div id="publishMessage" style="margin-top:8px; font-weight:500; font-size:0.9rem;"></div>
                 </div>
-
                 <div class="card">
                     <h4><i class="fas fa-tags"></i> Category</h4>
                     <select id="articleCategory">
@@ -330,18 +149,15 @@
                         <option value="Golf">Golf</option>
                     </select>
                 </div>
-
                 <div class="card">
                     <h4><i class="fas fa-hashtag"></i> Tags</h4>
                     <input type="text" id="articleTags" placeholder="EPL, Messi, Transfer">
                     <small style="color:#94a3b8; font-size:0.75rem;">Comma separated</small>
                 </div>
-
                 <div class="card">
                     <h4><i class="fas fa-calendar-alt"></i> Publish Date</h4>
                     <input type="date" id="articleDate">
                 </div>
-
                 <div class="card">
                     <h4><i class="fas fa-image"></i> Featured Image</h4>
                     <input type="file" id="featuredImageInput" accept="image/*" class="file-input">
@@ -351,13 +167,11 @@
                     </div>
                     <input type="hidden" id="featuredImageUrl" value="">
                 </div>
-
                 <div class="card">
                     <h4><i class="fas fa-align-left"></i> Excerpt</h4>
                     <textarea id="articleExcerpt" placeholder="Short summary for homepage..."></textarea>
                     <small style="color:#94a3b8; font-size:0.75rem;">Max 150 characters</small>
                 </div>
-
                 <div class="card" style="padding:16px;">
                     <h4><i class="fas fa-list-ul"></i> Your Articles</h4>
                     <div id="articleList" style="max-height:300px; overflow-y:auto; font-size:0.85rem;">
@@ -372,13 +186,10 @@
     <script src="js/auth.js"></script>
     <script>
         // ============================================================
-        //  EDITOR LOGIC – WITH WORKING IMAGE BUTTONS
+        //  FULL EDITOR LOGIC – WITH 100% WORKING FORMAT & IMAGE BUTTONS
         // ============================================================
 
-        let editingId = null;
-        let currentFeaturedFile = null;
-        let pendingCaption = false;
-
+        // DOM refs
         const content = document.getElementById('editorContent');
         const title = document.getElementById('articleTitle');
         const category = document.getElementById('articleCategory');
@@ -397,50 +208,56 @@
         const publishMsg = document.getElementById('publishMessage');
         const notice = document.getElementById('editorNotice');
 
-        // ---------- TOOLBAR ----------
-        window.execCmd = function(command, value = null) {
+        let editingId = null;
+        let currentFeaturedFile = null;
+        let pendingCaption = false;
+
+        // ---------- EXEC COMMAND (for formatting) ----------
+        function execCmd(command, value = null) {
             if (command === 'createLink') {
-                const url = prompt('Enter the URL:', 'https://');
+                const url = prompt('Enter URL:', 'https://');
                 if (url) document.execCommand('createLink', false, url);
             } else {
                 document.execCommand(command, false, value);
             }
             content.focus();
-        };
-
-        function formatHeading(level) {
-            document.execCommand('formatBlock', false, 'h' + level);
-            content.focus();
         }
 
-        // ---------- IMAGE INSERT WITH CAPTION ----------
+        // ---------- BUTTON EVENT BINDING ----------
+        document.getElementById('boldBtn').addEventListener('click', () => execCmd('bold'));
+        document.getElementById('italicBtn').addEventListener('click', () => execCmd('italic'));
+        document.getElementById('underlineBtn').addEventListener('click', () => execCmd('underline'));
+        document.getElementById('strikeBtn').addEventListener('click', () => execCmd('strikethrough'));
+        document.getElementById('ulBtn').addEventListener('click', () => execCmd('insertUnorderedList'));
+        document.getElementById('olBtn').addEventListener('click', () => execCmd('insertOrderedList'));
+        document.getElementById('h2Btn').addEventListener('click', () => execCmd('formatBlock', 'h2'));
+        document.getElementById('h3Btn').addEventListener('click', () => execCmd('formatBlock', 'h3'));
+        document.getElementById('h4Btn').addEventListener('click', () => execCmd('formatBlock', 'h4'));
+        document.getElementById('alignLeft').addEventListener('click', () => execCmd('justifyLeft'));
+        document.getElementById('alignCenter').addEventListener('click', () => execCmd('justifyCenter'));
+        document.getElementById('alignRight').addEventListener('click', () => execCmd('justifyRight'));
+        document.getElementById('linkBtn').addEventListener('click', () => execCmd('createLink'));
+        document.getElementById('unlinkBtn').addEventListener('click', () => execCmd('unlink'));
+
+        // ---------- IMAGE BUTTONS ----------
         function triggerImageUpload(withCaption) {
             pendingCaption = withCaption;
-            console.log('Triggering upload, caption:', withCaption);
             document.getElementById('imageUploadInput').click();
         }
 
-        // 🔥 Attach click events to the image buttons using JavaScript (more reliable)
-        document.getElementById('imageOnlyBtn').addEventListener('click', function(e) {
+        document.getElementById('imageOnlyBtn').addEventListener('click', (e) => {
             e.preventDefault();
-            console.log('Image Only button clicked');
             triggerImageUpload(false);
         });
-
-        document.getElementById('imageCaptionBtn').addEventListener('click', function(e) {
+        document.getElementById('imageCaptionBtn').addEventListener('click', (e) => {
             e.preventDefault();
-            console.log('Image + Caption button clicked');
             triggerImageUpload(true);
         });
 
-        // 🔥 Handle the file selection
+        // ---------- IMAGE UPLOAD HANDLER ----------
         document.getElementById('imageUploadInput').addEventListener('change', async function(e) {
             const file = e.target.files[0];
-            console.log('File selected:', file ? file.name : 'none');
-            if (!file) {
-                console.log('No file selected');
-                return;
-            }
+            if (!file) return;
             if (file.size > 5 * 1024 * 1024) {
                 alert('Image too large. Max 5MB.');
                 this.value = '';
@@ -449,11 +266,9 @@
             showNotice('⏳ Uploading image...', 'info');
             try {
                 const url = await uploadImage(file);
-                console.log('Uploaded URL:', url);
                 if (url) {
                     let html = '';
                     if (pendingCaption) {
-                        // Image with caption
                         html = `
                             <figure style="margin:16px 0; text-align:center;">
                                 <img src="${url}" alt="Image" style="max-width:100%; border-radius:12px;">
@@ -461,111 +276,132 @@
                             </figure>
                         `;
                         pendingCaption = false;
-                        console.log('Inserting image with caption');
                     } else {
-                        // Image only
                         html = `<img src="${url}" alt="Image" style="max-width:100%; border-radius:12px; margin:16px 0;">`;
-                        console.log('Inserting image only');
                     }
                     document.execCommand('insertHTML', false, html);
                     showNotice('✅ Image inserted!', 'success');
                     setTimeout(() => hideNotice(), 3000);
-                } else {
-                    console.error('Upload returned null URL');
-                    showNotice('❌ Upload failed: No URL returned', 'error');
                 }
             } catch(err) {
-                console.error('Upload error:', err);
                 showNotice('❌ Upload failed: ' + err.message, 'error');
             }
             this.value = '';
         });
 
-        // ---------- FORMAT MARKDOWN ----------
-        function convertMarkdownToHtml(text) {
-            let html = text;
+        // ---------- FORMAT BUTTON (MARKDOWN CONVERTER) ----------
+        document.getElementById('formatBtn').addEventListener('click', function() {
+            // 1. Get raw text from the editor (innerText strips HTML)
+            const raw = content.innerText || content.textContent || '';
+            if (!raw.trim()) {
+                showNotice('⚠️ Nothing to format. Paste some content first.', 'info');
+                return;
+            }
+
+            // 2. Convert Markdown to HTML
+            let html = raw;
+
+            // Headings: ## Heading → <h2>Heading</h2>
             html = html.replace(/^#### (.*)$/gm, '<h4>$1</h4>');
             html = html.replace(/^### (.*)$/gm, '<h3>$1</h3>');
             html = html.replace(/^## (.*)$/gm, '<h2>$1</h2>');
+
+            // Bold: **text** → <b>text</b>
             html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+
+            // Italic: *text* → <i>text</i>
             html = html.replace(/\*(.*?)\*/g, '<i>$1</i>');
+
+            // Strikethrough: ~~text~~ → <s>text</s>
             html = html.replace(/~~(.*?)~~/g, '<s>$1</s>');
+
+            // Links: [text](url) → <a href="url">text</a>
             html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
-            // Lists
+
+            // Lists: - item or * item → <ul><li>item</li></ul>
+            // We'll process line by line
             const lines = html.split('\n');
             let inList = false;
-            let result = [];
+            let listType = ''; // 'ul' or 'ol'
+            const processed = [];
+            let listItems = [];
+
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i];
                 const trimmed = line.trim();
-                const isBullet = /^[-*]\s+(.*)/.test(trimmed);
-                const isNumbered = /^\d+\.\s+(.*)/.test(trimmed);
-                const isList = isBullet || isNumbered;
-                if (isList) {
+                // Detect bullet or numbered list
+                const bulletMatch = trimmed.match(/^[-*]\s+(.*)/);
+                const numberMatch = trimmed.match(/^(\d+)\.\s+(.*)/);
+
+                if (bulletMatch) {
                     if (!inList) {
                         inList = true;
-                        if (isBullet) result.push('<ul>');
-                        else result.push('<ol>');
+                        listType = 'ul';
+                        listItems = [];
                     }
-                    let contentText = '';
-                    if (isBullet) contentText = trimmed.replace(/^[-*]\s+/, '');
-                    else contentText = trimmed.replace(/^\d+\.\s+/, '');
-                    result.push(`<li>${contentText}</li>`);
+                    listItems.push(`<li>${bulletMatch[1]}</li>`);
+                } else if (numberMatch) {
+                    if (!inList) {
+                        inList = true;
+                        listType = 'ol';
+                        listItems = [];
+                    }
+                    listItems.push(`<li>${numberMatch[2]}</li>`);
                 } else {
                     if (inList) {
+                        // Close the list
+                        processed.push(`<${listType}>${listItems.join('')}</${listType}>`);
                         inList = false;
-                        if (result.length > 0 && !result[result.length-1].match(/^<ul>|^<ol>/)) {
-                            result.push('</ul>');
-                        }
+                        listItems = [];
+                        listType = '';
                     }
                     if (trimmed !== '') {
+                        // Wrap in paragraph unless it's already a block tag
                         if (!/^<[h|u|o|a|p|b|i|s|d|f]/.test(trimmed)) {
-                            result.push(`<p>${trimmed}</p>`);
+                            processed.push(`<p>${trimmed}</p>`);
                         } else {
-                            result.push(trimmed);
+                            processed.push(trimmed);
                         }
                     } else {
-                        result.push('');
+                        processed.push(''); // preserve empty lines
                     }
                 }
             }
-            if (inList) result.push('</ul>');
-            html = result.join('\n');
+            if (inList) {
+                processed.push(`<${listType}>${listItems.join('')}</${listType}>`);
+            }
+            html = processed.join('\n');
+
+            // Clean up accidental double wrapping
             html = html.replace(/<p><ul>/g, '<ul>');
             html = html.replace(/<\/ul><\/p>/g, '</ul>');
             html = html.replace(/<p><ol>/g, '<ol>');
             html = html.replace(/<\/ol><\/p>/g, '</ol>');
             html = html.replace(/<p><li>/g, '<li>');
             html = html.replace(/<\/li><\/p>/g, '</li>');
-            return html;
-        }
 
-        window.formatContent = function() {
-            const rawText = content.innerText || content.textContent || '';
-            if (!rawText.trim()) {
-                showNotice('⚠️ Nothing to format. Paste some content first.', 'info');
-                return;
-            }
-            const formatted = convertMarkdownToHtml(rawText);
-            content.innerHTML = formatted || '<p>No content to display.</p>';
-            showNotice('✅ Content formatted!', 'success');
+            // 3. Insert into editor
+            content.innerHTML = html || '<p>No content to display.</p>';
+            showNotice('✅ Markdown formatted!', 'success');
             setTimeout(() => hideNotice(), 3000);
-        };
-
-        // ---------- PASTE HANDLER ----------
-        content.addEventListener('paste', function(e) {
-            setTimeout(() => {
-                const rawText = content.innerText || content.textContent || '';
-                if (rawText && rawText.match(/\*\*|##|\*|\[.*\]\(|[-*]\s/)) {
-                    const formatted = convertMarkdownToHtml(rawText);
-                    content.innerHTML = formatted;
-                    showNotice('✅ Auto‑formatted!', 'info');
-                    setTimeout(() => hideNotice(), 2000);
-                }
-            }, 100);
         });
 
-        // ---------- NOTICE ----------
+        // ---------- PASTE AUTO-FORMAT (optional) ----------
+        // We'll also try to auto-format on paste, but the Format button is guaranteed.
+        content.addEventListener('paste', function(e) {
+            // Wait a moment for the paste to complete
+            setTimeout(() => {
+                const raw = content.innerText || content.textContent || '';
+                if (raw && raw.match(/\*\*|##|\*|\[.*\]\(|[-*]\s/)) {
+                    // Auto-format (but we don't overwrite if user just pasted plain text)
+                    // We'll just trigger a notice
+                    showNotice('📝 Markdown detected! Click "Format" to style it.', 'info');
+                    setTimeout(() => hideNotice(), 4000);
+                }
+            }, 200);
+        });
+
+        // ---------- NOTICE HELPERS ----------
         function showNotice(msg, type = 'info') {
             notice.className = 'wp-notice ' + type;
             notice.innerHTML = msg;

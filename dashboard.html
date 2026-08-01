@@ -16,7 +16,6 @@
     <script>eruda.init();</script>
 
     <style>
-        /* WordPress-style editor layout */
         .wp-editor-wrapper {
             display: flex;
             gap: 32px;
@@ -133,6 +132,15 @@
         .wp-editor-toolbar button i {
             margin-right: 4px;
         }
+        .wp-editor-toolbar .format-btn {
+            background: #f97316;
+            color: #fff;
+            border-color: #f97316;
+        }
+        .wp-editor-toolbar .format-btn:hover {
+            background: #ea580c;
+            border-color: #ea580c;
+        }
         .wp-editor-content {
             border: 1.5px solid #e2e8f0;
             border-radius: 0 0 12px 12px;
@@ -224,8 +232,7 @@
             <!-- ===== MAIN EDITOR ===== -->
             <div class="wp-editor-main">
                 <div id="editorNotice" class="wp-notice info">
-                    <i class="fas fa-info-circle"></i> Welcome! Start writing your article below. 
-                    <small style="display:block; margin-top:4px;">Paste content with Markdown (<code>## Heading</code>, <code>**bold**</code>) – it will auto-format!</small>
+                    <i class="fas fa-info-circle"></i> Paste your content, then click <strong>"Format"</strong> to auto‑format headings, bold, lists, and links!
                 </div>
 
                 <!-- Title -->
@@ -253,9 +260,11 @@
                     <button onclick="execCmd('unlink')" title="Remove Link"><i class="fas fa-unlink"></i></button>
                     <span style="color:#94a3b8;">|</span>
                     <button onclick="insertImageFromInput()" title="Insert Image"><i class="fas fa-image"></i> Image</button>
+                    <!-- 🔥 NEW FORMAT BUTTON -->
+                    <button onclick="formatContent()" class="format-btn" title="Format Markdown"><i class="fas fa-magic"></i> Format</button>
                 </div>
 
-                <!-- 🔥 CONTENT EDITOR with Markdown/HTML paste support -->
+                <!-- CONTENT EDITOR -->
                 <div id="editorContent" class="wp-editor-content" contenteditable="true" spellcheck="true">
                     <p>Start writing your article...</p>
                 </div>
@@ -345,14 +354,12 @@
     <script src="js/auth.js"></script>
     <script>
         // ============================================================
-        //  WORDPRESS-STYLE EDITOR – WITH MARKDOWN/HTML PASTE SUPPORT
+        //  EDITOR LOGIC
         // ============================================================
 
-        // ---------- GLOBALS ----------
         let editingId = null;
         let currentFeaturedFile = null;
 
-        // ---------- DOM REFS ----------
         const content = document.getElementById('editorContent');
         const title = document.getElementById('articleTitle');
         const category = document.getElementById('articleCategory');
@@ -371,13 +378,11 @@
         const publishMsg = document.getElementById('publishMessage');
         const notice = document.getElementById('editorNotice');
 
-        // ---------- TOOLBAR COMMANDS ----------
+        // ---------- TOOLBAR ----------
         window.execCmd = function(command, value = null) {
             if (command === 'createLink') {
                 const url = prompt('Enter the URL:', 'https://');
                 if (url) document.execCommand('createLink', false, url);
-            } else if (command === 'formatBlock') {
-                document.execCommand(command, false, value);
             } else {
                 document.execCommand(command, false, value);
             }
@@ -418,42 +423,37 @@
         });
 
         // ============================================================
-        //  🔥 MARKDOWN & HTML PASTE CONVERTER
+        //  🔥 MARKDOWN CONVERTER & FORMAT FUNCTION
         // ============================================================
 
         function convertMarkdownToHtml(text) {
             let html = text;
 
             // ---- HEADINGS ----
-            // ## Heading 2 → <h2>Heading</h2>
-            html = html.replace(/^## (.*)$/gm, '<h2>$1</h2>');
-            // ### Heading 3 → <h3>Heading</h3>
-            html = html.replace(/^### (.*)$/gm, '<h3>$1</h3>');
-            // #### Heading 4 → <h4>Heading</h4>
             html = html.replace(/^#### (.*)$/gm, '<h4>$1</h4>');
+            html = html.replace(/^### (.*)$/gm, '<h3>$1</h3>');
+            html = html.replace(/^## (.*)$/gm, '<h2>$1</h2>');
 
-            // ---- BOLD ----
-            // **text** → <b>text</b>
+            // ---- BOLD & ITALIC ----
             html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-
-            // ---- ITALIC ----
-            // *text* → <i>text</i>
             html = html.replace(/\*(.*?)\*/g, '<i>$1</i>');
 
+            // ---- STRIKETHROUGH ----
+            html = html.replace(/~~(.*?)~~/g, '<s>$1</s>');
+
             // ---- LINKS ----
-            // [text](url) → <a href="url">text</a>
             html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
 
-            // ---- BULLET LISTS ----
-            // - item → <ul><li>item</li></ul>
+            // ---- LISTS ----
             const lines = html.split('\n');
             let inList = false;
-            let listHtml = [];
+            let listStack = [];
             let result = [];
 
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i];
                 const trimmed = line.trim();
+                
                 const isBullet = /^[-*]\s+(.*)/.test(trimmed);
                 const isNumbered = /^\d+\.\s+(.*)/.test(trimmed);
                 const isList = isBullet || isNumbered;
@@ -461,97 +461,107 @@
                 if (isList) {
                     if (!inList) {
                         inList = true;
-                        listHtml = [];
-                        // Start list
                         if (isBullet) {
-                            listHtml.push('<ul>');
+                            result.push('<ul>');
                         } else {
-                            listHtml.push('<ol>');
+                            result.push('<ol>');
                         }
                     }
-                    // Extract the list item content
-                    let content = '';
+                    let contentText = '';
                     if (isBullet) {
-                        content = trimmed.replace(/^[-*]\s+/, '');
+                        contentText = trimmed.replace(/^[-*]\s+/, '');
                     } else {
-                        content = trimmed.replace(/^\d+\.\s+/, '');
+                        contentText = trimmed.replace(/^\d+\.\s+/, '');
                     }
-                    listHtml.push(`<li>${content}</li>`);
+                    result.push(`<li>${contentText}</li>`);
                 } else {
                     if (inList) {
                         inList = false;
-                        if (listHtml[0] === '<ul>') {
-                            listHtml.push('</ul>');
+                        if (result[result.length - 1] === '<ul>' || result[result.length - 1] === '<ol>') {
+                            // empty list – remove it
+                            result.pop();
                         } else {
-                            listHtml.push('</ol>');
+                            if (trimmed.match(/^<ul>|^<ol>/)) {
+                                // already has list tag
+                            } else {
+                                // close the list
+                                if (result.length > 0) {
+                                    if (result[result.length - 1] === '</li>') {
+                                        // do nothing
+                                    }
+                                }
+                                result.push('</ul>');
+                            }
                         }
-                        result.push(listHtml.join(''));
-                        listHtml = [];
                     }
                     if (trimmed !== '') {
-                        result.push(line);
+                        // Check if it's already a block tag
+                        if (!/^<[h|u|o|a|p|b|i|s|d]/.test(trimmed)) {
+                            result.push(`<p>${trimmed}</p>`);
+                        } else {
+                            result.push(trimmed);
+                        }
                     } else {
                         result.push('');
                     }
                 }
             }
 
-            if (inList && listHtml.length > 0) {
-                if (listHtml[0] === '<ul>') {
-                    listHtml.push('</ul>');
-                } else {
-                    listHtml.push('</ol>');
-                }
-                result.push(listHtml.join(''));
+            if (inList) {
+                result.push('</ul>');
             }
 
             html = result.join('\n');
 
-            // ---- PARAGRAPHS ----
-            // Split by double newlines and wrap in paragraphs
-            // But don't wrap if it already contains HTML block tags
-            const paragraphs = html.split('\n\n');
-            html = paragraphs.map(p => {
-                if (p.trim() === '') return '';
-                if (/^<[h|u|o|a|p|b|i|s]/.test(p.trim())) return p;
-                return `<p>${p}</p>`;
-            }).join('');
+            // Fix any accidental double-wrapping
+            html = html.replace(/<p><ul>/g, '<ul>');
+            html = html.replace(/<\/ul><\/p>/g, '</ul>');
+            html = html.replace(/<p><ol>/g, '<ol>');
+            html = html.replace(/<\/ol><\/p>/g, '</ol>');
+            html = html.replace(/<p><li>/g, '<li>');
+            html = html.replace(/<\/li><\/p>/g, '</li>');
 
             return html;
         }
 
-        // Clean up any leftover HTML tags that might break
-        function cleanHtml(html) {
-            // Remove any empty paragraphs
-            html = html.replace(/<p><\/p>/g, '');
-            // Ensure headings are properly formatted
-            html = html.replace(/<h2>(.*?)<\/h2>/g, '<h2>$1</h2>');
-            html = html.replace(/<h3>(.*?)<\/h3>/g, '<h3>$1</h3>');
-            html = html.replace(/<h4>(.*?)<\/h4>/g, '<h4>$1</h4>');
-            return html;
-        }
+        // 🔥 FORMAT CONTENT – call this manually or via paste
+        window.formatContent = function() {
+            // Get the current content as plain text (strip existing HTML)
+            const rawText = content.innerText || content.textContent || '';
+            if (!rawText.trim()) {
+                showNotice('⚠️ Nothing to format. Paste some content first.', 'info');
+                return;
+            }
 
-        // ---------- PASTE HANDLER (INTERCEPT PASTE EVENT) ----------
+            // Convert Markdown to HTML
+            let formatted = convertMarkdownToHtml(rawText);
+            
+            // Insert into editor
+            content.innerHTML = formatted || '<p>No content to display.</p>';
+
+            showNotice('✅ Content formatted! Headings, bold, lists, and links applied.', 'success');
+            setTimeout(() => hideNotice(), 3000);
+        };
+
+        // ---------- PASTE HANDLER ----------
         content.addEventListener('paste', function(e) {
-            e.preventDefault();
-
-            // Get the pasted text
-            const pastedData = (e.clipboardData || window.clipboardData).getData('text/plain');
-            if (!pastedData) return;
-
-            // Convert Markdown/HTML to formatted HTML
-            let formattedHtml = convertMarkdownToHtml(pastedData);
-            formattedHtml = cleanHtml(formattedHtml);
-
-            // Insert at cursor position
-            document.execCommand('insertHTML', false, formattedHtml);
-
-            // Show a quick notification
-            showNotice('✅ Content formatted! Markdown/HTML converted.', 'info');
-            setTimeout(() => hideNotice(), 2000);
+            // Let the browser handle paste, but we'll auto-format after a short delay
+            // This way, the content is inserted, and then we format it.
+            setTimeout(() => {
+                const rawText = content.innerText || content.textContent || '';
+                if (rawText && rawText.length > 0) {
+                    // Check if it contains any markdown characters
+                    if (rawText.match(/\*\*|##|\*|\[.*\]\(|[-*]\s/)) {
+                        const formatted = convertMarkdownToHtml(rawText);
+                        content.innerHTML = formatted;
+                        showNotice('✅ Auto‑formatted!', 'info');
+                        setTimeout(() => hideNotice(), 2000);
+                    }
+                }
+            }, 100);
         });
 
-        // ---------- NOTICE HELPERS ----------
+        // ---------- NOTICE ----------
         function showNotice(msg, type = 'info') {
             notice.className = 'wp-notice ' + type;
             notice.innerHTML = msg;
@@ -592,7 +602,7 @@
             setTimeout(hideNotice, 4000);
         }
 
-        // ---------- LOAD ARTICLE FOR EDIT ----------
+        // ---------- LOAD ARTICLE ----------
         window.editArticle = async function(id) {
             try {
                 const articles = await getArticles();
@@ -632,10 +642,9 @@
             }
         };
 
-        // ---------- CANCEL EDIT ----------
         cancelBtn.addEventListener('click', resetForm);
 
-        // ---------- PUBLISH / UPDATE ----------
+        // ---------- PUBLISH ----------
         async function saveArticle(isUpdate = false) {
             const titleVal = title.value.trim();
             const categoryVal = category.value.trim();
@@ -709,7 +718,7 @@
         publishBtn.addEventListener('click', () => saveArticle(false));
         updateBtn.addEventListener('click', () => saveArticle(true));
 
-        // ---------- REFRESH ARTICLE LIST ----------
+        // ---------- REFRESH LIST ----------
         async function refreshArticleList() {
             const list = document.getElementById('articleList');
             try {
@@ -731,7 +740,6 @@
             }
         }
 
-        // ---------- DELETE ----------
         window.deleteArticle = async function(id) {
             if (!confirm('Delete this article permanently?')) return;
             const result = await deleteArticleById(id);

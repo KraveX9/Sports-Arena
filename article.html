@@ -3,29 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- ===== DYNAMIC SEO TAGS (set by JavaScript below) ===== -->
     <title>Sports Arena · Article</title>
-    <meta name="description" content="Read the latest sports news and analysis on Sports Arena.">
-    <meta name="keywords" content="sports, news, analysis, football, basketball, cricket">
-    <link rel="canonical" id="canonicalLink" href="">
-
-    <!-- Open Graph -->
-    <meta property="og:title" id="ogTitle" content="Sports Arena">
-    <meta property="og:description" id="ogDesc" content="Read the latest sports news and analysis on Sports Arena.">
-    <meta property="og:url" id="ogUrl" content="">
-    <meta property="og:type" content="article">
-    <meta property="og:image" id="ogImage" content="https://picsum.photos/seed/sports/1200/630">
-    <meta property="og:image:width" content="1200">
-    <meta property="og:image:height" content="630">
-
-    <!-- Twitter Cards -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" id="twitterTitle" content="Sports Arena">
-    <meta name="twitter:description" id="twitterDesc" content="Read the latest sports news and analysis on Sports Arena.">
-    <meta name="twitter:image" id="twitterImage" content="https://picsum.photos/seed/sports/1200/630">
-
-    <!-- ===== FONTS & STYLES ===== -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
@@ -33,10 +11,11 @@
     <link rel="stylesheet" href="css/style.css" />
     <link rel="stylesheet" href="css/article.css" />
     <link rel="stylesheet" href="css/dashboard.css" />
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-
     <style>
+        /* (styles are the same as before – keep them) */
         .single-article { padding:40px 0 60px; background:#f8fafc; }
         .single-article .container { max-width:720px; background:#fff; padding:40px; border-radius:24px; box-shadow:0 4px 20px rgba(0,0,0,0.04); border:1px solid #e9edf2; }
         .single-article .article-image { width:100%; max-height:400px; object-fit:cover; border-radius:16px; margin-bottom:24px; }
@@ -80,6 +59,10 @@
         .comment-message { margin-top:12px; font-weight:500; }
         .no-comments { color:#94a3b8; font-size:0.95rem; text-align:center; padding:20px 0; }
         @media (max-width:640px) { .single-article .container { padding:24px; } .single-article h1 { font-size:1.8rem; } .comment-form .form-row { flex-direction:column; } }
+        /* Loading spinner */
+        .loader { text-align:center; padding:60px 0; }
+        .loader i { font-size:2rem; color:#f97316; }
+        .loader p { color:#94a3b8; margin-top:12px; }
     </style>
 </head>
 <body>
@@ -103,7 +86,11 @@
 
     <section class="single-article">
         <div class="container" id="articleContainer">
-            <div style="text-align:center; padding:40px 0;"><i class="fas fa-spinner fa-spin" style="font-size:2rem; color:#f97316;"></i><p style="color:#94a3b8; margin-top:12px;">Loading article...</p></div>
+            <!-- Spinner shown initially -->
+            <div class="loader" id="loadingSpinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading article...</p>
+            </div>
         </div>
     </section>
 
@@ -149,55 +136,27 @@
         </div>
     </footer>
 
+    <!-- CONFIG & AUTH -->
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
+
+    <!-- ARTICLE LOADER -->
     <script>
-        // ============================================================
-        //  SEO META TAG UPDATER
-        // ============================================================
-        function updateMetaTags(article) {
-            const url = window.location.href;
-            const title = article.title + ' · Sports Arena';
-            const desc = article.summary || article.content?.slice(0, 160) || 'Read the latest sports news and analysis on Sports Arena.';
-            const image = article.image || 'https://picsum.photos/seed/sports/1200/630';
-            const tags = (article.tags || []).join(', ');
-
-            // Document title
-            document.title = title;
-
-            // Standard meta
-            document.querySelector('meta[name="description"]').content = desc;
-            document.querySelector('meta[name="keywords"]').content = tags || 'sports, news, analysis';
-            document.querySelector('link[rel="canonical"]').href = url;
-
-            // Open Graph
-            document.querySelector('meta[property="og:title"]').content = title;
-            document.querySelector('meta[property="og:description"]').content = desc;
-            document.querySelector('meta[property="og:image"]').content = image;
-            document.querySelector('meta[property="og:url"]').content = url;
-            document.querySelector('meta[property="og:type"]').content = 'article';
-
-            // Twitter Cards
-            document.querySelector('meta[name="twitter:title"]').content = title;
-            document.querySelector('meta[name="twitter:description"]').content = desc;
-            document.querySelector('meta[name="twitter:image"]').content = image;
-            document.querySelector('meta[name="twitter:card"]').content = 'summary_large_image';
-
-            console.log('✅ SEO meta tags updated for:', article.title);
-        }
-
-        // ============================================================
-        //  LOAD ARTICLE
-        // ============================================================
-        async function loadArticle() {
+        (async function loadArticle() {
+            // Get slug from URL
             const params = new URLSearchParams(window.location.search);
             const slug = params.get('slug');
 
+            const container = document.getElementById('articleContainer');
+            const spinner = document.getElementById('loadingSpinner');
+
+            // If no slug, show error immediately
             if (!slug) {
-                document.getElementById('articleContainer').innerHTML = `
+                container.innerHTML = `
                     <div style="text-align:center; padding:40px 0;">
                         <i class="fas fa-exclamation-circle" style="font-size:2rem; color:#dc2626;"></i>
                         <h2 style="margin:16px 0;">Article not found</h2>
+                        <p style="color:#64748b;">No article specified.</p>
                         <a href="index.html" class="btn-primary" style="text-decoration:none; display:inline-block;">← Back to Home</a>
                     </div>
                 `;
@@ -205,32 +164,39 @@
             }
 
             try {
+                // Fetch article by slug (this is a direct call to Firestore)
                 const article = await getArticleBySlug(slug);
+
+                // If article not found, show error
                 if (!article) {
-                    document.getElementById('articleContainer').innerHTML = `
+                    container.innerHTML = `
                         <div style="text-align:center; padding:40px 0;">
                             <i class="fas fa-exclamation-circle" style="font-size:2rem; color:#dc2626;"></i>
                             <h2 style="margin:16px 0;">Article not found</h2>
+                            <p style="color:#64748b;">The article you're looking for doesn't exist or has been removed.</p>
                             <a href="index.html" class="btn-primary" style="text-decoration:none; display:inline-block;">← Back to Home</a>
                         </div>
                     `;
                     return;
                 }
 
-                // 🔥 UPDATE SEO TAGS BEFORE RENDERING
-                updateMetaTags(article);
+                // --- ARTICLE FOUND – RENDER IMMEDIATELY ---
 
-                // Log view in background
-                const country = await fetch('https://ipapi.co/json/').then(r => r.json()).catch(() => ({ country_name: 'Unknown' }));
-                incrementViewsAndLog(article.id, slug, country.country_name || 'Unknown');
+                // Remove spinner (even if still visible)
+                if (spinner) spinner.remove();
 
+                // Build the article HTML
                 const viewCount = article.views || 0;
                 const comments = await getComments(slug);
                 const url = window.location.href;
                 const title = encodeURIComponent(article.title);
                 const shareUrl = encodeURIComponent(url);
 
-                // Build comments
+                // Tags
+                const tagsHtml = (article.tags && article.tags.length) ?
+                    `<div class="article-tags">${article.tags.map(t => `<span>#${t}</span>`).join('')}</div>` : '';
+
+                // Comments
                 let commentsHtml = `<div class="comments-section">
                     <h3><i class="fas fa-comments"></i> Comments</h3>
                     <div class="comments-count">${comments.length} comment${comments.length!==1?'s':''}</div>
@@ -260,9 +226,7 @@
                     </form>
                 </div>`;
 
-                const tagsHtml = (article.tags && article.tags.length) ? 
-                    `<div class="article-tags">${article.tags.map(t => `<span>#${t}</span>`).join('')}</div>` : '';
-
+                // Build full HTML
                 const html = `
                     <span class="article-category-badge">${article.category}</span>
                     <h1>${article.title}</h1>
@@ -287,9 +251,9 @@
                     ${commentsHtml}
                 `;
 
-                document.getElementById('articleContainer').innerHTML = html;
+                container.innerHTML = html;
 
-                // Comment form event
+                // --- Attach comment form event ---
                 const form = document.getElementById('commentForm');
                 if (form) {
                     form.addEventListener('submit', async function(e) {
@@ -304,4 +268,45 @@
                             return;
                         }
                         submitBtn.disabled = true;
-                        subm
+                        submitBtn.textContent = 'Posting...';
+                        const result = await addComment(slug, name, comment, email);
+                        if (result.success) {
+                            msgDiv.innerHTML = '<span style="color:#16a34a;">✅ Comment posted!</span>';
+                            const fresh = await getComments(slug);
+                            const list = document.querySelector('.comment-list');
+                            const countDiv = document.querySelector('.comments-count');
+                            if (list) {
+                                if (fresh.length === 0) list.innerHTML = '<div class="no-comments">No comments yet.</div>';
+                                else {
+                                    list.innerHTML = fresh.map(c => {
+                                        const date = c.createdAt ? new Date(c.createdAt.toDate()).toLocaleDateString() : '';
+                                        return `<div class="comment-item"><div class="comment-header"><span class="comment-name">${c.name}</span><span class="comment-date">${date}</span></div><p class="comment-text">${c.comment}</p></div>`;
+                                    }).join('');
+                                }
+                                if (countDiv) countDiv.textContent = `${fresh.length} comment${fresh.length!==1?'s':''}`;
+                            }
+                            document.getElementById('commentName').value = '';
+                            document.getElementById('commentEmail').value = '';
+                            document.getElementById('commentText').value = '';
+                            setTimeout(() => msgDiv.innerHTML = '', 3000);
+                        } else {
+                            msgDiv.innerHTML = `<span style="color:#dc2626;">❌ Failed: ${result.error}</span>`;
+                        }
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Post Comment';
+                    });
+                }
+
+                // --- Log view in background (non-blocking) ---
+                fetch('https://ipapi.co/json/')
+                    .then(res => res.json())
+                    .then(data => {
+                        incrementViewsAndLog(article.id, slug, data.country_name || 'Unknown');
+                    })
+                    .catch(() => {
+                        incrementViewsAndLog(article.id, slug, 'Unknown');
+                    });
+
+            } catch (error) {
+                // If any error occurs during fetch, show error message
+        

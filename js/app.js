@@ -7,6 +7,12 @@ let currentSearch = '';
 let displayedCount = 6;
 let allArticles = [];
 
+// Helper: build the full URL of an article
+function getArticleUrl(slug) {
+    const base = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/');
+    return base + 'article.html?slug=' + slug;
+}
+
 async function loadAndRender() {
     try {
         allArticles = await getArticles();
@@ -81,10 +87,11 @@ function applyFilters() {
     renderArticles(filtered);
 }
 
+// 🔥 FIXED: Uses the article's own URL
 function getShareButtons(article) {
-    const url = window.location.href;
+    const articleUrl = getArticleUrl(article.slug);
     const title = encodeURIComponent(article.title);
-    const shareUrl = encodeURIComponent(url);
+    const shareUrl = encodeURIComponent(articleUrl);
     
     return `
         <div class="article-share">
@@ -105,15 +112,17 @@ function getShareButtons(article) {
     `;
 }
 
+// 🔥 FIXED: copyLink uses the correct URL
 window.copyLink = function(url) {
+    const realUrl = decodeURIComponent(url);
     if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(decodeURIComponent(url)).then(() => {
+        navigator.clipboard.writeText(realUrl).then(() => {
             alert('✅ Link copied to clipboard!');
         }).catch(() => {
-            fallbackCopy(decodeURIComponent(url));
+            fallbackCopy(realUrl);
         });
     } else {
-        fallbackCopy(decodeURIComponent(url));
+        fallbackCopy(realUrl);
     }
 };
 
@@ -153,7 +162,6 @@ function renderArticles(filteredArticles) {
     let html = '';
     sliced.forEach(a => {
         const articleLink = a.slug ? `article.html?slug=${a.slug}` : '#';
-        // 🔥 Display view count
         const viewCount = a.views !== undefined ? a.views : 0;
         html += `
             <div class="article-card">

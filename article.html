@@ -3,7 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sports Arena · Article</title>
+
+    <!-- ===== SEO META TAGS (ALL PRESENT) ===== -->
+    <title id="dynamicTitle">Sports Arena · Article</title>
+    <meta name="description" id="dynamicDescription" content="Read the latest sports news and analysis on Sports Arena.">
+    <meta name="keywords" content="sports, news, analysis, football, basketball, cricket">
+    <link rel="canonical" id="dynamicCanonical" href="">
+
+    <!-- Open Graph (Facebook, WhatsApp, LinkedIn) -->
+    <meta property="og:title" id="ogTitle" content="Sports Arena">
+    <meta property="og:description" id="ogDescription" content="Read the latest sports news and analysis on Sports Arena.">
+    <meta property="og:url" id="ogUrl" content="">
+    <meta property="og:type" content="article">
+    <meta property="og:image" id="ogImage" content="https://picsum.photos/seed/sports/1200/630">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" id="twitterTitle" content="Sports Arena">
+    <meta name="twitter:description" id="twitterDescription" content="Read the latest sports news and analysis on Sports Arena.">
+    <meta name="twitter:image" id="twitterImage" content="https://picsum.photos/seed/sports/1200/630">
+
+    <!-- ===== FONTS & STYLES ===== -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
@@ -13,8 +35,9 @@
     <link rel="stylesheet" href="css/dashboard.css" />
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
     <style>
-        /* (same styles – keep as before) */
+        /* (styles are the same – keep this block) */
         .single-article { padding:40px 0 60px; background:#f8fafc; }
         .single-article .container { max-width:720px; background:#fff; padding:40px; border-radius:24px; box-shadow:0 4px 20px rgba(0,0,0,0.04); border:1px solid #e9edf2; }
         .single-article .article-image { width:100%; max-height:400px; object-fit:cover; border-radius:16px; margin-bottom:24px; }
@@ -61,6 +84,10 @@
         .loader { text-align:center; padding:60px 0; }
         .loader i { font-size:2rem; color:#f97316; }
         .loader p { color:#94a3b8; margin-top:12px; }
+        .error-state { text-align:center; padding:40px 0; }
+        .error-state i { font-size:2rem; color:#dc2626; }
+        .error-state h2 { margin:16px 0; }
+        .error-state p { color:#64748b; }
     </style>
 </head>
 <body>
@@ -142,22 +169,24 @@
             const slug = params.get('slug');
 
             const container = document.getElementById('articleContainer');
+            const spinner = document.getElementById('loadingSpinner');
 
             // If no slug, show error immediately
             if (!slug) {
+                if (spinner) spinner.remove();
                 container.innerHTML = `
-                    <div style="text-align:center; padding:40px 0;">
-                        <i class="fas fa-exclamation-circle" style="font-size:2rem; color:#dc2626;"></i>
-                        <h2 style="margin:16px 0;">Article not found</h2>
-                        <p style="color:#64748b;">No article specified.</p>
-                        <a href="index.html" class="btn-primary" style="text-decoration:none; display:inline-block;">← Back to Home</a>
+                    <div class="error-state">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <h2>Article not found</h2>
+                        <p>No article specified.</p>
+                        <a href="index.html" class="btn-primary" style="text-decoration:none; display:inline-block; margin-top:16px;">← Back to Home</a>
                     </div>
                 `;
                 return;
             }
 
             try {
-                // ---- Step 2: Fetch all articles (fast) ----
+                // ---- Step 2: Fetch all articles ----
                 const articles = await getArticles();
 
                 // ---- Step 3: Find the one with matching slug ----
@@ -165,18 +194,58 @@
 
                 // If not found
                 if (!article) {
+                    if (spinner) spinner.remove();
                     container.innerHTML = `
-                        <div style="text-align:center; padding:40px 0;">
-                            <i class="fas fa-exclamation-circle" style="font-size:2rem; color:#dc2626;"></i>
-                            <h2 style="margin:16px 0;">Article not found</h2>
-                            <p style="color:#64748b;">The article you're looking for doesn't exist or has been removed.</p>
-                            <a href="index.html" class="btn-primary" style="text-decoration:none; display:inline-block;">← Back to Home</a>
+                        <div class="error-state">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <h2>Article not found</h2>
+                            <p>The article you're looking for doesn't exist or has been removed.</p>
+                            <a href="index.html" class="btn-primary" style="text-decoration:none; display:inline-block; margin-top:16px;">← Back to Home</a>
                         </div>
                     `;
                     return;
                 }
 
-                // ---- Step 4: Render article ----
+                // ---- Step 4: Update SEO meta tags (SAFELY) ----
+                function updateMetaTagsSafely() {
+                    const desc = article.summary || article.content?.slice(0, 160) || 'Read the latest sports news on Sports Arena.';
+                    const image = article.image || 'https://picsum.photos/seed/sports/1200/630';
+                    const title = article.title + ' · Sports Arena';
+                    const url = window.location.href;
+
+                    // Document title
+                    document.title = title;
+
+                    // Helper: set meta content only if element exists
+                    const setMeta = (selector, content) => {
+                        const el = document.querySelector(selector);
+                        if (el) el.content = content;
+                    };
+                    const setLink = (selector, href) => {
+                        const el = document.querySelector(selector);
+                        if (el) el.href = href;
+                    };
+
+                    // Standard meta
+                    setMeta('meta[name="description"]', desc);
+                    setMeta('meta[name="keywords"]', (article.tags || []).join(', ') || 'sports, news, analysis');
+                    setLink('link[rel="canonical"]', url);
+
+                    // Open Graph
+                    setMeta('meta[property="og:title"]', title);
+                    setMeta('meta[property="og:description"]', desc);
+                    setMeta('meta[property="og:image"]', image);
+                    setMeta('meta[property="og:url"]', url);
+
+                    // Twitter Cards
+                    setMeta('meta[name="twitter:title"]', title);
+                    setMeta('meta[name="twitter:description"]', desc);
+                    setMeta('meta[name="twitter:image"]', image);
+                }
+
+                updateMetaTagsSafely();
+
+                // ---- Step 5: Render article ----
                 const viewCount = article.views || 0;
                 const comments = await getComments(slug);
                 const url = window.location.href;
@@ -242,27 +311,9 @@
                     ${commentsHtml}
                 `;
 
+                // Remove spinner and render content
+                if (spinner) spinner.remove();
                 container.innerHTML = html;
-
-                // ---- Step 5: Update SEO meta tags (dynamically) ----
-                function updateMetaTags() {
-                    const desc = article.summary || article.content?.slice(0, 160) || 'Read the latest sports news.';
-                    const image = article.image || 'https://picsum.photos/seed/sports/1200/630';
-
-                    document.title = article.title + ' · Sports Arena';
-                    document.querySelector('meta[name="description"]').content = desc;
-                    document.querySelector('link[rel="canonical"]').href = url;
-
-                    document.querySelector('meta[property="og:title"]').content = article.title + ' · Sports Arena';
-                    document.querySelector('meta[property="og:description"]').content = desc;
-                    document.querySelector('meta[property="og:image"]').content = image;
-                    document.querySelector('meta[property="og:url"]').content = url;
-
-                    document.querySelector('meta[name="twitter:title"]').content = article.title + ' · Sports Arena';
-                    document.querySelector('meta[name="twitter:description"]').content = desc;
-                    document.querySelector('meta[name="twitter:image"]').content = image;
-                }
-                updateMetaTags();
 
                 // ---- Step 6: Attach comment form ----
                 const form = document.getElementById('commentForm');
@@ -320,12 +371,13 @@
 
             } catch (error) {
                 console.error('Article loading error:', error);
+                if (spinner) spinner.remove();
                 container.innerHTML = `
-                    <div style="text-align:center; padding:40px 0;">
-                        <i class="fas fa-exclamation-triangle" style="font-size:2rem; color:#dc2626;"></i>
-                        <h2 style="margin:16px 0;">Error loading article</h2>
-                        <p style="color:#64748b;">${error.message}</p>
-                        <a href="index.html" class="btn-primary" style="text-decoration:none; display:inline-block;">← Back to Home</a>
+                    <div class="error-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h2>Error loading article</h2>
+                        <p>${error.message}</p>
+                        <a href="index.html" class="btn-primary" style="text-decoration:none; display:inline-block; margin-top:16px;">← Back to Home</a>
                     </div>
                 `;
             }

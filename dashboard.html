@@ -8,13 +8,9 @@
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
-    <!-- 🔥 TINYMCE EDITOR (WordPress-style) -->
-    <script src="https://cdn.tiny.cloud/1/your-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
-    
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-
     <!-- Mobile Console -->
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
     <script>eruda.init();</script>
@@ -143,10 +139,26 @@
             background: #fff;
             min-height: 400px;
             padding: 16px;
+            font-family: 'Inter', sans-serif;
         }
         .wp-editor-content:focus {
             outline: none;
             border-color: #f97316;
+        }
+        .wp-editor-content h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 16px 0 8px;
+        }
+        .wp-editor-content h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin: 14px 0 6px;
+        }
+        .wp-editor-content h4 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin: 12px 0 4px;
         }
         .wp-editor-title {
             font-size: 2rem;
@@ -212,7 +224,8 @@
             <!-- ===== MAIN EDITOR ===== -->
             <div class="wp-editor-main">
                 <div id="editorNotice" class="wp-notice info">
-                    <i class="fas fa-info-circle"></i> Welcome! Start writing your article below.
+                    <i class="fas fa-info-circle"></i> Welcome! Start writing your article below. 
+                    <small style="display:block; margin-top:4px;">Paste content with Markdown (<code>## Heading</code>, <code>**bold**</code>) – it will auto-format!</small>
                 </div>
 
                 <!-- Title -->
@@ -228,9 +241,9 @@
                     <button onclick="execCmd('insertUnorderedList')" title="Bullet List"><i class="fas fa-list-ul"></i></button>
                     <button onclick="execCmd('insertOrderedList')" title="Numbered List"><i class="fas fa-list-ol"></i></button>
                     <span style="color:#94a3b8;">|</span>
-                    <button onclick="execCmd('formatBlock','h2')" title="Heading 2">H2</button>
-                    <button onclick="execCmd('formatBlock','h3')" title="Heading 3">H3</button>
-                    <button onclick="execCmd('formatBlock','h4')" title="Heading 4">H4</button>
+                    <button onclick="formatHeading(2)" title="Heading 2">H2</button>
+                    <button onclick="formatHeading(3)" title="Heading 3">H3</button>
+                    <button onclick="formatHeading(4)" title="Heading 4">H4</button>
                     <span style="color:#94a3b8;">|</span>
                     <button onclick="execCmd('justifyLeft')" title="Align Left"><i class="fas fa-align-left"></i></button>
                     <button onclick="execCmd('justifyCenter')" title="Align Center"><i class="fas fa-align-center"></i></button>
@@ -240,15 +253,14 @@
                     <button onclick="execCmd('unlink')" title="Remove Link"><i class="fas fa-unlink"></i></button>
                     <span style="color:#94a3b8;">|</span>
                     <button onclick="insertImageFromInput()" title="Insert Image"><i class="fas fa-image"></i> Image</button>
-                    <button onclick="toggleCodeView()" title="HTML"><i class="fas fa-code"></i></button>
                 </div>
 
-                <!-- Content -->
+                <!-- 🔥 CONTENT EDITOR with Markdown/HTML paste support -->
                 <div id="editorContent" class="wp-editor-content" contenteditable="true" spellcheck="true">
                     <p>Start writing your article...</p>
                 </div>
 
-                <!-- Hidden field to store the image URL from upload -->
+                <!-- Hidden file input for image upload -->
                 <input type="file" id="imageUploadInput" accept="image/*" style="display:none;">
             </div>
 
@@ -333,13 +345,12 @@
     <script src="js/auth.js"></script>
     <script>
         // ============================================================
-        //  WORDPRESS-STYLE EDITOR – FULL FUNCTIONALITY
+        //  WORDPRESS-STYLE EDITOR – WITH MARKDOWN/HTML PASTE SUPPORT
         // ============================================================
 
         // ---------- GLOBALS ----------
         let editingId = null;
         let currentFeaturedFile = null;
-        let isCodeView = false;
 
         // ---------- DOM REFS ----------
         const content = document.getElementById('editorContent');
@@ -362,7 +373,6 @@
 
         // ---------- TOOLBAR COMMANDS ----------
         window.execCmd = function(command, value = null) {
-            if (isCodeView) return;
             if (command === 'createLink') {
                 const url = prompt('Enter the URL:', 'https://');
                 if (url) document.execCommand('createLink', false, url);
@@ -374,10 +384,14 @@
             content.focus();
         };
 
-        // ---------- IMAGE INSERT (from toolbar) ----------
+        function formatHeading(level) {
+            document.execCommand('formatBlock', false, 'h' + level);
+            content.focus();
+        }
+
+        // ---------- IMAGE INSERT ----------
         window.insertImageFromInput = function() {
-            const input = document.getElementById('imageUploadInput');
-            input.click();
+            document.getElementById('imageUploadInput').click();
         };
 
         document.getElementById('imageUploadInput').addEventListener('change', async function(e) {
@@ -403,54 +417,145 @@
             this.value = '';
         });
 
-        // ---------- CODE VIEW TOGGLE ----------
-        window.toggleCodeView = function() {
-            isCodeView = !isCodeView;
-            if (isCodeView) {
-                // Switch to raw HTML
-                content.innerText = content.innerHTML;
-                content.style.fontFamily = 'monospace';
-                content.style.whiteSpace = 'pre-wrap';
-            } else {
-                // Switch back to rich text
-                const raw = content.innerText;
-                content.innerHTML = raw;
-                content.style.fontFamily = '';
-                content.style.whiteSpace = '';
-            }
-        };
+        // ============================================================
+        //  🔥 MARKDOWN & HTML PASTE CONVERTER
+        // ============================================================
 
-        // ---------- FEATURED IMAGE ----------
-        featuredInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            if (file.size > 5 * 1024 * 1024) {
-                alert('Image too large. Max 5MB.');
-                this.value = '';
-                return;
+        function convertMarkdownToHtml(text) {
+            let html = text;
+
+            // ---- HEADINGS ----
+            // ## Heading 2 → <h2>Heading</h2>
+            html = html.replace(/^## (.*)$/gm, '<h2>$1</h2>');
+            // ### Heading 3 → <h3>Heading</h3>
+            html = html.replace(/^### (.*)$/gm, '<h3>$1</h3>');
+            // #### Heading 4 → <h4>Heading</h4>
+            html = html.replace(/^#### (.*)$/gm, '<h4>$1</h4>');
+
+            // ---- BOLD ----
+            // **text** → <b>text</b>
+            html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+
+            // ---- ITALIC ----
+            // *text* → <i>text</i>
+            html = html.replace(/\*(.*?)\*/g, '<i>$1</i>');
+
+            // ---- LINKS ----
+            // [text](url) → <a href="url">text</a>
+            html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
+
+            // ---- BULLET LISTS ----
+            // - item → <ul><li>item</li></ul>
+            const lines = html.split('\n');
+            let inList = false;
+            let listHtml = [];
+            let result = [];
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const trimmed = line.trim();
+                const isBullet = /^[-*]\s+(.*)/.test(trimmed);
+                const isNumbered = /^\d+\.\s+(.*)/.test(trimmed);
+                const isList = isBullet || isNumbered;
+
+                if (isList) {
+                    if (!inList) {
+                        inList = true;
+                        listHtml = [];
+                        // Start list
+                        if (isBullet) {
+                            listHtml.push('<ul>');
+                        } else {
+                            listHtml.push('<ol>');
+                        }
+                    }
+                    // Extract the list item content
+                    let content = '';
+                    if (isBullet) {
+                        content = trimmed.replace(/^[-*]\s+/, '');
+                    } else {
+                        content = trimmed.replace(/^\d+\.\s+/, '');
+                    }
+                    listHtml.push(`<li>${content}</li>`);
+                } else {
+                    if (inList) {
+                        inList = false;
+                        if (listHtml[0] === '<ul>') {
+                            listHtml.push('</ul>');
+                        } else {
+                            listHtml.push('</ol>');
+                        }
+                        result.push(listHtml.join(''));
+                        listHtml = [];
+                    }
+                    if (trimmed !== '') {
+                        result.push(line);
+                    } else {
+                        result.push('');
+                    }
+                }
             }
-            currentFeaturedFile = file;
-            const reader = new FileReader();
-            reader.onload = function(ev) {
-                featuredPreview.src = ev.target.result;
-                featuredPreviewContainer.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-            featuredUrl.value = '';
+
+            if (inList && listHtml.length > 0) {
+                if (listHtml[0] === '<ul>') {
+                    listHtml.push('</ul>');
+                } else {
+                    listHtml.push('</ol>');
+                }
+                result.push(listHtml.join(''));
+            }
+
+            html = result.join('\n');
+
+            // ---- PARAGRAPHS ----
+            // Split by double newlines and wrap in paragraphs
+            // But don't wrap if it already contains HTML block tags
+            const paragraphs = html.split('\n\n');
+            html = paragraphs.map(p => {
+                if (p.trim() === '') return '';
+                if (/^<[h|u|o|a|p|b|i|s]/.test(p.trim())) return p;
+                return `<p>${p}</p>`;
+            }).join('');
+
+            return html;
+        }
+
+        // Clean up any leftover HTML tags that might break
+        function cleanHtml(html) {
+            // Remove any empty paragraphs
+            html = html.replace(/<p><\/p>/g, '');
+            // Ensure headings are properly formatted
+            html = html.replace(/<h2>(.*?)<\/h2>/g, '<h2>$1</h2>');
+            html = html.replace(/<h3>(.*?)<\/h3>/g, '<h3>$1</h3>');
+            html = html.replace(/<h4>(.*?)<\/h4>/g, '<h4>$1</h4>');
+            return html;
+        }
+
+        // ---------- PASTE HANDLER (INTERCEPT PASTE EVENT) ----------
+        content.addEventListener('paste', function(e) {
+            e.preventDefault();
+
+            // Get the pasted text
+            const pastedData = (e.clipboardData || window.clipboardData).getData('text/plain');
+            if (!pastedData) return;
+
+            // Convert Markdown/HTML to formatted HTML
+            let formattedHtml = convertMarkdownToHtml(pastedData);
+            formattedHtml = cleanHtml(formattedHtml);
+
+            // Insert at cursor position
+            document.execCommand('insertHTML', false, formattedHtml);
+
+            // Show a quick notification
+            showNotice('✅ Content formatted! Markdown/HTML converted.', 'info');
+            setTimeout(() => hideNotice(), 2000);
         });
 
-        removeFeaturedBtn.addEventListener('click', function() {
-            featuredInput.value = '';
-            featuredPreviewContainer.style.display = 'none';
-            featuredPreview.src = '#';
-            featuredUrl.value = '';
-            currentFeaturedFile = null;
-        });
-
-        // ---------- NOTICE HELPER ----------
+        // ---------- NOTICE HELPERS ----------
         function showNotice(msg, type = 'info') {
             notice.className = 'wp-notice ' + type;
             notice.innerHTML = msg;
+            notice.style.display = 'block';
         }
 
         function hideNotice() {
@@ -521,7 +626,6 @@
                 showNotice(`✏️ Editing: "${article.title}"`, 'info');
                 setTimeout(hideNotice, 3000);
 
-                // Scroll to top
                 document.querySelector('.wp-editor-wrapper').scrollIntoView({ behavior: 'smooth' });
             } catch(err) {
                 alert('Error loading article: ' + err.message);
@@ -551,7 +655,6 @@
             publishMsg.innerHTML = '⏳ Saving...';
 
             try {
-                // Upload featured image if new one selected
                 if (currentFeaturedFile) {
                     const url = await uploadImage(currentFeaturedFile);
                     if (url) imageUrl = url;
@@ -641,6 +744,33 @@
                 alert('Delete failed: ' + result.error);
             }
         };
+
+        // ---------- FEATURED IMAGE ----------
+        featuredInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Image too large. Max 5MB.');
+                this.value = '';
+                return;
+            }
+            currentFeaturedFile = file;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                featuredPreview.src = ev.target.result;
+                featuredPreviewContainer.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+            featuredUrl.value = '';
+        });
+
+        removeFeaturedBtn.addEventListener('click', function() {
+            featuredInput.value = '';
+            featuredPreviewContainer.style.display = 'none';
+            featuredPreview.src = '#';
+            featuredUrl.value = '';
+            currentFeaturedFile = null;
+        });
 
         // ---------- LOGOUT ----------
         document.getElementById('dashboardLogout').addEventListener('click', function(e) {

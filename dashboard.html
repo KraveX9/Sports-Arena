@@ -8,10 +8,8 @@
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
-    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <!-- Mobile Console -->
     <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
     <script>eruda.init();</script>
 
@@ -168,6 +166,20 @@
             font-weight: 700;
             margin: 12px 0 4px;
         }
+        .wp-editor-content figure {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .wp-editor-content figure img {
+            max-width: 100%;
+            border-radius: 12px;
+        }
+        .wp-editor-content figure figcaption {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-top: 8px;
+            font-style: italic;
+        }
         .wp-editor-title {
             font-size: 2rem;
             font-weight: 700;
@@ -227,18 +239,16 @@
     </header>
 
     <div style="background:#f8fafc; padding:20px 0; min-height:100vh;">
-        <div class="wp-editor-wrapper" id="editorWrapper">
+        <div class="wp-editor-wrapper">
 
             <!-- ===== MAIN EDITOR ===== -->
             <div class="wp-editor-main">
                 <div id="editorNotice" class="wp-notice info">
-                    <i class="fas fa-info-circle"></i> Paste your content, then click <strong>"Format"</strong> to auto‑format headings, bold, lists, and links!
+                    <i class="fas fa-info-circle"></i> Click <strong>"Image + Caption"</strong> to upload an image with an editable caption below it.
                 </div>
 
-                <!-- Title -->
                 <input type="text" id="articleTitle" class="wp-editor-title" placeholder="Add title...">
 
-                <!-- Toolbar -->
                 <div class="wp-editor-toolbar">
                     <button onclick="execCmd('bold')" title="Bold"><b>B</b></button>
                     <button onclick="execCmd('italic')" title="Italic"><i>I</i></button>
@@ -259,12 +269,13 @@
                     <button onclick="execCmd('createLink')" title="Insert Link"><i class="fas fa-link"></i></button>
                     <button onclick="execCmd('unlink')" title="Remove Link"><i class="fas fa-unlink"></i></button>
                     <span style="color:#94a3b8;">|</span>
-                    <button onclick="insertImageFromInput()" title="Insert Image"><i class="fas fa-image"></i> Image</button>
-                    <!-- 🔥 NEW FORMAT BUTTON -->
+                    <!-- Two image buttons -->
+                    <button onclick="insertImageFromInput(false)" title="Insert Image only"><i class="fas fa-image"></i> Image</button>
+                    <button onclick="insertImageFromInput(true)" title="Insert Image with Caption" style="background:#fef3c7; border-color:#f59e0b;"><i class="fas fa-image"></i> + Caption</button>
+                    <span style="color:#94a3b8;">|</span>
                     <button onclick="formatContent()" class="format-btn" title="Format Markdown"><i class="fas fa-magic"></i> Format</button>
                 </div>
 
-                <!-- CONTENT EDITOR -->
                 <div id="editorContent" class="wp-editor-content" contenteditable="true" spellcheck="true">
                     <p>Start writing your article...</p>
                 </div>
@@ -275,7 +286,6 @@
 
             <!-- ===== SIDEBAR ===== -->
             <div class="wp-editor-sidebar">
-                <!-- Publish -->
                 <div class="card">
                     <h4><i class="fas fa-cloud-upload-alt"></i> Publish</h4>
                     <div style="margin-bottom:8px;">
@@ -294,7 +304,6 @@
                     <div id="publishMessage" style="margin-top:8px; font-weight:500; font-size:0.9rem;"></div>
                 </div>
 
-                <!-- Categories -->
                 <div class="card">
                     <h4><i class="fas fa-tags"></i> Category</h4>
                     <select id="articleCategory">
@@ -308,20 +317,17 @@
                     </select>
                 </div>
 
-                <!-- Tags -->
                 <div class="card">
                     <h4><i class="fas fa-hashtag"></i> Tags</h4>
                     <input type="text" id="articleTags" placeholder="EPL, Messi, Transfer">
                     <small style="color:#94a3b8; font-size:0.75rem;">Comma separated</small>
                 </div>
 
-                <!-- Date -->
                 <div class="card">
                     <h4><i class="fas fa-calendar-alt"></i> Publish Date</h4>
                     <input type="date" id="articleDate">
                 </div>
 
-                <!-- Featured Image -->
                 <div class="card">
                     <h4><i class="fas fa-image"></i> Featured Image</h4>
                     <input type="file" id="featuredImageInput" accept="image/*" class="file-input">
@@ -332,14 +338,12 @@
                     <input type="hidden" id="featuredImageUrl" value="">
                 </div>
 
-                <!-- Excerpt -->
                 <div class="card">
                     <h4><i class="fas fa-align-left"></i> Excerpt</h4>
                     <textarea id="articleExcerpt" placeholder="Short summary for homepage..."></textarea>
                     <small style="color:#94a3b8; font-size:0.75rem;">Max 150 characters</small>
                 </div>
 
-                <!-- Manage Articles -->
                 <div class="card" style="padding:16px;">
                     <h4><i class="fas fa-list-ul"></i> Your Articles</h4>
                     <div id="articleList" style="max-height:300px; overflow-y:auto; font-size:0.85rem;">
@@ -354,7 +358,7 @@
     <script src="js/auth.js"></script>
     <script>
         // ============================================================
-        //  EDITOR LOGIC
+        //  EDITOR LOGIC – with image + caption support
         // ============================================================
 
         let editingId = null;
@@ -394,8 +398,11 @@
             content.focus();
         }
 
-        // ---------- IMAGE INSERT ----------
-        window.insertImageFromInput = function() {
+        // ---------- IMAGE INSERT (with optional caption) ----------
+        let pendingCaption = false;
+
+        window.insertImageFromInput = function(withCaption = false) {
+            pendingCaption = withCaption;
             document.getElementById('imageUploadInput').click();
         };
 
@@ -411,8 +418,17 @@
             try {
                 const url = await uploadImage(file);
                 if (url) {
-                    const imgHtml = `<img src="${url}" alt="Image" style="max-width:100%; margin:16px 0;">`;
-                    document.execCommand('insertHTML', false, imgHtml);
+                    let html = `<img src="${url}" alt="Image" style="max-width:100%; border-radius:12px; margin:16px 0;">`;
+                    if (pendingCaption) {
+                        html = `
+                            <figure style="margin:16px 0; text-align:center;">
+                                <img src="${url}" alt="Image" style="max-width:100%; border-radius:12px;">
+                                <figcaption style="font-size:0.9rem; color:#64748b; margin-top:8px; font-style:italic;">Add caption...</figcaption>
+                            </figure>
+                        `;
+                        pendingCaption = false;
+                    }
+                    document.execCommand('insertHTML', false, html);
                     showNotice('✅ Image inserted!', 'success');
                     setTimeout(() => hideNotice(), 3000);
                 }
@@ -422,376 +438,28 @@
             this.value = '';
         });
 
-        // ============================================================
-        //  🔥 MARKDOWN CONVERTER & FORMAT FUNCTION
-        // ============================================================
-
+        // ---------- FORMAT MARKDOWN ----------
         function convertMarkdownToHtml(text) {
             let html = text;
-
-            // ---- HEADINGS ----
             html = html.replace(/^#### (.*)$/gm, '<h4>$1</h4>');
             html = html.replace(/^### (.*)$/gm, '<h3>$1</h3>');
             html = html.replace(/^## (.*)$/gm, '<h2>$1</h2>');
-
-            // ---- BOLD & ITALIC ----
             html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
             html = html.replace(/\*(.*?)\*/g, '<i>$1</i>');
-
-            // ---- STRIKETHROUGH ----
             html = html.replace(/~~(.*?)~~/g, '<s>$1</s>');
-
-            // ---- LINKS ----
             html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
-
-            // ---- LISTS ----
+            // Lists
             const lines = html.split('\n');
             let inList = false;
-            let listStack = [];
             let result = [];
-
             for (let i = 0; i < lines.length; i++) {
                 const line = lines[i];
                 const trimmed = line.trim();
-                
                 const isBullet = /^[-*]\s+(.*)/.test(trimmed);
                 const isNumbered = /^\d+\.\s+(.*)/.test(trimmed);
                 const isList = isBullet || isNumbered;
-
                 if (isList) {
                     if (!inList) {
                         inList = true;
-                        if (isBullet) {
-                            result.push('<ul>');
-                        } else {
-                            result.push('<ol>');
-                        }
-                    }
-                    let contentText = '';
-                    if (isBullet) {
-                        contentText = trimmed.replace(/^[-*]\s+/, '');
-                    } else {
-                        contentText = trimmed.replace(/^\d+\.\s+/, '');
-                    }
-                    result.push(`<li>${contentText}</li>`);
-                } else {
-                    if (inList) {
-                        inList = false;
-                        if (result[result.length - 1] === '<ul>' || result[result.length - 1] === '<ol>') {
-                            // empty list – remove it
-                            result.pop();
-                        } else {
-                            if (trimmed.match(/^<ul>|^<ol>/)) {
-                                // already has list tag
-                            } else {
-                                // close the list
-                                if (result.length > 0) {
-                                    if (result[result.length - 1] === '</li>') {
-                                        // do nothing
-                                    }
-                                }
-                                result.push('</ul>');
-                            }
-                        }
-                    }
-                    if (trimmed !== '') {
-                        // Check if it's already a block tag
-                        if (!/^<[h|u|o|a|p|b|i|s|d]/.test(trimmed)) {
-                            result.push(`<p>${trimmed}</p>`);
-                        } else {
-                            result.push(trimmed);
-                        }
-                    } else {
-                        result.push('');
-                    }
-                }
-            }
-
-            if (inList) {
-                result.push('</ul>');
-            }
-
-            html = result.join('\n');
-
-            // Fix any accidental double-wrapping
-            html = html.replace(/<p><ul>/g, '<ul>');
-            html = html.replace(/<\/ul><\/p>/g, '</ul>');
-            html = html.replace(/<p><ol>/g, '<ol>');
-            html = html.replace(/<\/ol><\/p>/g, '</ol>');
-            html = html.replace(/<p><li>/g, '<li>');
-            html = html.replace(/<\/li><\/p>/g, '</li>');
-
-            return html;
-        }
-
-        // 🔥 FORMAT CONTENT – call this manually or via paste
-        window.formatContent = function() {
-            // Get the current content as plain text (strip existing HTML)
-            const rawText = content.innerText || content.textContent || '';
-            if (!rawText.trim()) {
-                showNotice('⚠️ Nothing to format. Paste some content first.', 'info');
-                return;
-            }
-
-            // Convert Markdown to HTML
-            let formatted = convertMarkdownToHtml(rawText);
-            
-            // Insert into editor
-            content.innerHTML = formatted || '<p>No content to display.</p>';
-
-            showNotice('✅ Content formatted! Headings, bold, lists, and links applied.', 'success');
-            setTimeout(() => hideNotice(), 3000);
-        };
-
-        // ---------- PASTE HANDLER ----------
-        content.addEventListener('paste', function(e) {
-            // Let the browser handle paste, but we'll auto-format after a short delay
-            // This way, the content is inserted, and then we format it.
-            setTimeout(() => {
-                const rawText = content.innerText || content.textContent || '';
-                if (rawText && rawText.length > 0) {
-                    // Check if it contains any markdown characters
-                    if (rawText.match(/\*\*|##|\*|\[.*\]\(|[-*]\s/)) {
-                        const formatted = convertMarkdownToHtml(rawText);
-                        content.innerHTML = formatted;
-                        showNotice('✅ Auto‑formatted!', 'info');
-                        setTimeout(() => hideNotice(), 2000);
-                    }
-                }
-            }, 100);
-        });
-
-        // ---------- NOTICE ----------
-        function showNotice(msg, type = 'info') {
-            notice.className = 'wp-notice ' + type;
-            notice.innerHTML = msg;
-            notice.style.display = 'block';
-        }
-
-        function hideNotice() {
-            notice.style.display = 'none';
-        }
-
-        // ---------- DATE ----------
-        function getTodayDate() {
-            return new Date().toISOString().split('T')[0];
-        }
-        date.value = getTodayDate();
-
-        // ---------- RESET FORM ----------
-        function resetForm() {
-            title.value = '';
-            content.innerHTML = '<p>Start writing your article...</p>';
-            category.value = '';
-            tags.value = '';
-            excerpt.value = '';
-            date.value = getTodayDate();
-            featuredInput.value = '';
-            featuredPreviewContainer.style.display = 'none';
-            featuredPreview.src = '#';
-            featuredUrl.value = '';
-            currentFeaturedFile = null;
-            editingId = null;
-            publishBtn.style.display = 'block';
-            updateBtn.style.display = 'none';
-            cancelBtn.style.display = 'none';
-            statusBadge.className = 'status-badge draft';
-            statusBadge.textContent = 'Draft';
-            publishMsg.innerHTML = '';
-            showNotice('🆕 New article ready. Start writing!', 'info');
-            setTimeout(hideNotice, 4000);
-        }
-
-        // ---------- LOAD ARTICLE ----------
-        window.editArticle = async function(id) {
-            try {
-                const articles = await getArticles();
-                const article = articles.find(a => a.id === id);
-                if (!article) return alert('Article not found.');
-
-                editingId = id;
-                title.value = article.title || '';
-                content.innerHTML = article.content || article.summary || '<p>Start writing...</p>';
-                category.value = article.category || '';
-                tags.value = (article.tags || []).join(', ');
-                excerpt.value = article.summary || '';
-                date.value = article.date || getTodayDate();
-
-                if (article.image) {
-                    featuredUrl.value = article.image;
-                    featuredPreview.src = article.image;
-                    featuredPreviewContainer.style.display = 'block';
-                    currentFeaturedFile = null;
-                } else {
-                    featuredPreviewContainer.style.display = 'none';
-                    featuredUrl.value = '';
-                }
-
-                publishBtn.style.display = 'none';
-                updateBtn.style.display = 'block';
-                cancelBtn.style.display = 'block';
-                statusBadge.className = 'status-badge published';
-                statusBadge.textContent = 'Published';
-                publishMsg.innerHTML = '';
-                showNotice(`✏️ Editing: "${article.title}"`, 'info');
-                setTimeout(hideNotice, 3000);
-
-                document.querySelector('.wp-editor-wrapper').scrollIntoView({ behavior: 'smooth' });
-            } catch(err) {
-                alert('Error loading article: ' + err.message);
-            }
-        };
-
-        cancelBtn.addEventListener('click', resetForm);
-
-        // ---------- PUBLISH ----------
-        async function saveArticle(isUpdate = false) {
-            const titleVal = title.value.trim();
-            const categoryVal = category.value.trim();
-            const excerptVal = excerpt.value.trim() || 'No summary provided.';
-            const contentVal = content.innerHTML.trim() || excerptVal;
-            const tagsVal = tags.value.split(',').map(t => t.trim()).filter(Boolean);
-            const dateVal = date.value || getTodayDate();
-            let imageUrl = featuredUrl.value;
-
-            if (!titleVal || !categoryVal) {
-                showNotice('❌ Please fill in Title and Category.', 'error');
-                return;
-            }
-
-            publishBtn.disabled = true;
-            updateBtn.disabled = true;
-            publishMsg.innerHTML = '⏳ Saving...';
-
-            try {
-                if (currentFeaturedFile) {
-                    const url = await uploadImage(currentFeaturedFile);
-                    if (url) imageUrl = url;
-                }
-                if (!imageUrl) imageUrl = 'https://picsum.photos/seed/sports/600/400';
-
-                let result;
-                if (isUpdate) {
-                    result = await updateArticle(editingId, {
-                        title: titleVal,
-                        content: contentVal,
-                        summary: excerptVal,
-                        category: categoryVal,
-                        author: 'Admin',
-                        image: imageUrl,
-                        date: dateVal,
-                        tags: tagsVal
-                    });
-                } else {
-                    result = await addArticle({
-                        title: titleVal,
-                        content: contentVal,
-                        summary: excerptVal,
-                        category: categoryVal,
-                        author: 'Admin',
-                        image: imageUrl,
-                        date: dateVal,
-                        tags: tagsVal
-                    });
-                }
-
-                if (result.success) {
-                    showNotice(`✅ Article ${isUpdate ? 'updated' : 'published'} successfully!`, 'success');
-                    statusBadge.className = 'status-badge published';
-                    statusBadge.textContent = 'Published';
-                    if (!isUpdate) resetForm();
-                    await refreshArticleList();
-                    if (window.loadAndRender) window.loadAndRender();
-                    setTimeout(hideNotice, 4000);
-                } else {
-                    showNotice('❌ Failed: ' + result.error, 'error');
-                }
-            } catch(err) {
-                showNotice('❌ Error: ' + err.message, 'error');
-            }
-
-            publishBtn.disabled = false;
-            updateBtn.disabled = false;
-            publishMsg.innerHTML = '';
-        }
-
-        publishBtn.addEventListener('click', () => saveArticle(false));
-        updateBtn.addEventListener('click', () => saveArticle(true));
-
-        // ---------- REFRESH LIST ----------
-        async function refreshArticleList() {
-            const list = document.getElementById('articleList');
-            try {
-                const articles = await getArticles();
-                if (articles.length === 0) {
-                    list.innerHTML = '<span style="color:#94a3b8;">No articles yet.</span>';
-                } else {
-                    list.innerHTML = articles.map(a => `
-                        <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #f1f5f9;">
-                            <span style="cursor:pointer; color:#0b1a2e;" onclick="editArticle('${a.id}')">${a.title}</span>
-                            <button onclick="deleteArticle('${a.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:0.8rem;">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `).join('');
-                }
-            } catch(e) {
-                list.innerHTML = '<span style="color:#ef4444;">❌ Error loading articles</span>';
-            }
-        }
-
-        window.deleteArticle = async function(id) {
-            if (!confirm('Delete this article permanently?')) return;
-            const result = await deleteArticleById(id);
-            if (result.success) {
-                alert('🗑️ Deleted!');
-                if (editingId === id) resetForm();
-                await refreshArticleList();
-                if (window.loadAndRender) window.loadAndRender();
-            } else {
-                alert('Delete failed: ' + result.error);
-            }
-        };
-
-        // ---------- FEATURED IMAGE ----------
-        featuredInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            if (file.size > 5 * 1024 * 1024) {
-                alert('Image too large. Max 5MB.');
-                this.value = '';
-                return;
-            }
-            currentFeaturedFile = file;
-            const reader = new FileReader();
-            reader.onload = function(ev) {
-                featuredPreview.src = ev.target.result;
-                featuredPreviewContainer.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-            featuredUrl.value = '';
-        });
-
-        removeFeaturedBtn.addEventListener('click', function() {
-            featuredInput.value = '';
-            featuredPreviewContainer.style.display = 'none';
-            featuredPreview.src = '#';
-            featuredUrl.value = '';
-            currentFeaturedFile = null;
-        });
-
-        // ---------- LOGOUT ----------
-        document.getElementById('dashboardLogout').addEventListener('click', function(e) {
-            e.preventDefault();
-            adminLogout();
-        });
-
-        // ---------- INIT ----------
-        async function init() {
-            await refreshArticleList();
-            resetForm();
-        }
-        document.addEventListener('DOMContentLoaded', init);
-    </script>
-</body>
-</html>
+                        if (isBullet) result.push('<ul>');
+                        else result.

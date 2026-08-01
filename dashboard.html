@@ -139,6 +139,20 @@
             background: #ea580c;
             border-color: #ea580c;
         }
+        .wp-editor-toolbar .image-btn {
+            background: #e0f2fe;
+            border-color: #7dd3fc;
+        }
+        .wp-editor-toolbar .image-btn:hover {
+            background: #bae6fd;
+        }
+        .wp-editor-toolbar .caption-btn {
+            background: #fef3c7;
+            border-color: #f59e0b;
+        }
+        .wp-editor-toolbar .caption-btn:hover {
+            background: #fde68a;
+        }
         .wp-editor-content {
             border: 1.5px solid #e2e8f0;
             border-radius: 0 0 12px 12px;
@@ -244,7 +258,7 @@
             <!-- ===== MAIN EDITOR ===== -->
             <div class="wp-editor-main">
                 <div id="editorNotice" class="wp-notice info">
-                    <i class="fas fa-info-circle"></i> Click <strong>"Image + Caption"</strong> to upload an image with an editable caption below it.
+                    <i class="fas fa-info-circle"></i> Click <strong>"Image"</strong> for a plain image, or <strong>"Image + Caption"</strong> for an image with a caption.
                 </div>
 
                 <input type="text" id="articleTitle" class="wp-editor-title" placeholder="Add title...">
@@ -269,9 +283,9 @@
                     <button onclick="execCmd('createLink')" title="Insert Link"><i class="fas fa-link"></i></button>
                     <button onclick="execCmd('unlink')" title="Remove Link"><i class="fas fa-unlink"></i></button>
                     <span style="color:#94a3b8;">|</span>
-                    <!-- Two image buttons -->
-                    <button onclick="insertImageFromInput(false)" title="Insert Image only"><i class="fas fa-image"></i> Image</button>
-                    <button onclick="insertImageFromInput(true)" title="Insert Image with Caption" style="background:#fef3c7; border-color:#f59e0b;"><i class="fas fa-image"></i> + Caption</button>
+                    <!-- 🔥 IMAGE BUTTONS with IDs for JavaScript listeners -->
+                    <button id="imageOnlyBtn" class="image-btn" title="Insert Image only"><i class="fas fa-image"></i> Image</button>
+                    <button id="imageCaptionBtn" class="caption-btn" title="Insert Image with Caption"><i class="fas fa-image"></i> + Caption</button>
                     <span style="color:#94a3b8;">|</span>
                     <button onclick="formatContent()" class="format-btn" title="Format Markdown"><i class="fas fa-magic"></i> Format</button>
                 </div>
@@ -358,11 +372,12 @@
     <script src="js/auth.js"></script>
     <script>
         // ============================================================
-        //  EDITOR LOGIC – with image + caption support
+        //  EDITOR LOGIC – WITH WORKING IMAGE BUTTONS
         // ============================================================
 
         let editingId = null;
         let currentFeaturedFile = null;
+        let pendingCaption = false;
 
         const content = document.getElementById('editorContent');
         const title = document.getElementById('articleTitle');
@@ -398,17 +413,34 @@
             content.focus();
         }
 
-        // ---------- IMAGE INSERT (with optional caption) ----------
-        let pendingCaption = false;
-
-        window.insertImageFromInput = function(withCaption = false) {
+        // ---------- IMAGE INSERT WITH CAPTION ----------
+        function triggerImageUpload(withCaption) {
             pendingCaption = withCaption;
+            console.log('Triggering upload, caption:', withCaption);
             document.getElementById('imageUploadInput').click();
-        };
+        }
 
+        // 🔥 Attach click events to the image buttons using JavaScript (more reliable)
+        document.getElementById('imageOnlyBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Image Only button clicked');
+            triggerImageUpload(false);
+        });
+
+        document.getElementById('imageCaptionBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('Image + Caption button clicked');
+            triggerImageUpload(true);
+        });
+
+        // 🔥 Handle the file selection
         document.getElementById('imageUploadInput').addEventListener('change', async function(e) {
             const file = e.target.files[0];
-            if (!file) return;
+            console.log('File selected:', file ? file.name : 'none');
+            if (!file) {
+                console.log('No file selected');
+                return;
+            }
             if (file.size > 5 * 1024 * 1024) {
                 alert('Image too large. Max 5MB.');
                 this.value = '';
@@ -417,9 +449,11 @@
             showNotice('⏳ Uploading image...', 'info');
             try {
                 const url = await uploadImage(file);
+                console.log('Uploaded URL:', url);
                 if (url) {
-                    let html = `<img src="${url}" alt="Image" style="max-width:100%; border-radius:12px; margin:16px 0;">`;
+                    let html = '';
                     if (pendingCaption) {
+                        // Image with caption
                         html = `
                             <figure style="margin:16px 0; text-align:center;">
                                 <img src="${url}" alt="Image" style="max-width:100%; border-radius:12px;">
@@ -427,12 +461,21 @@
                             </figure>
                         `;
                         pendingCaption = false;
+                        console.log('Inserting image with caption');
+                    } else {
+                        // Image only
+                        html = `<img src="${url}" alt="Image" style="max-width:100%; border-radius:12px; margin:16px 0;">`;
+                        console.log('Inserting image only');
                     }
                     document.execCommand('insertHTML', false, html);
                     showNotice('✅ Image inserted!', 'success');
                     setTimeout(() => hideNotice(), 3000);
+                } else {
+                    console.error('Upload returned null URL');
+                    showNotice('❌ Upload failed: No URL returned', 'error');
                 }
             } catch(err) {
+                console.error('Upload error:', err);
                 showNotice('❌ Upload failed: ' + err.message, 'error');
             }
             this.value = '';
@@ -462,4 +505,293 @@
                     if (!inList) {
                         inList = true;
                         if (isBullet) result.push('<ul>');
-                        else result.
+                        else result.push('<ol>');
+                    }
+                    let contentText = '';
+                    if (isBullet) contentText = trimmed.replace(/^[-*]\s+/, '');
+                    else contentText = trimmed.replace(/^\d+\.\s+/, '');
+                    result.push(`<li>${contentText}</li>`);
+                } else {
+                    if (inList) {
+                        inList = false;
+                        if (result.length > 0 && !result[result.length-1].match(/^<ul>|^<ol>/)) {
+                            result.push('</ul>');
+                        }
+                    }
+                    if (trimmed !== '') {
+                        if (!/^<[h|u|o|a|p|b|i|s|d|f]/.test(trimmed)) {
+                            result.push(`<p>${trimmed}</p>`);
+                        } else {
+                            result.push(trimmed);
+                        }
+                    } else {
+                        result.push('');
+                    }
+                }
+            }
+            if (inList) result.push('</ul>');
+            html = result.join('\n');
+            html = html.replace(/<p><ul>/g, '<ul>');
+            html = html.replace(/<\/ul><\/p>/g, '</ul>');
+            html = html.replace(/<p><ol>/g, '<ol>');
+            html = html.replace(/<\/ol><\/p>/g, '</ol>');
+            html = html.replace(/<p><li>/g, '<li>');
+            html = html.replace(/<\/li><\/p>/g, '</li>');
+            return html;
+        }
+
+        window.formatContent = function() {
+            const rawText = content.innerText || content.textContent || '';
+            if (!rawText.trim()) {
+                showNotice('⚠️ Nothing to format. Paste some content first.', 'info');
+                return;
+            }
+            const formatted = convertMarkdownToHtml(rawText);
+            content.innerHTML = formatted || '<p>No content to display.</p>';
+            showNotice('✅ Content formatted!', 'success');
+            setTimeout(() => hideNotice(), 3000);
+        };
+
+        // ---------- PASTE HANDLER ----------
+        content.addEventListener('paste', function(e) {
+            setTimeout(() => {
+                const rawText = content.innerText || content.textContent || '';
+                if (rawText && rawText.match(/\*\*|##|\*|\[.*\]\(|[-*]\s/)) {
+                    const formatted = convertMarkdownToHtml(rawText);
+                    content.innerHTML = formatted;
+                    showNotice('✅ Auto‑formatted!', 'info');
+                    setTimeout(() => hideNotice(), 2000);
+                }
+            }, 100);
+        });
+
+        // ---------- NOTICE ----------
+        function showNotice(msg, type = 'info') {
+            notice.className = 'wp-notice ' + type;
+            notice.innerHTML = msg;
+            notice.style.display = 'block';
+        }
+        function hideNotice() {
+            notice.style.display = 'none';
+        }
+
+        // ---------- DATE ----------
+        function getTodayDate() {
+            return new Date().toISOString().split('T')[0];
+        }
+        date.value = getTodayDate();
+
+        // ---------- RESET ----------
+        function resetForm() {
+            title.value = '';
+            content.innerHTML = '<p>Start writing your article...</p>';
+            category.value = '';
+            tags.value = '';
+            excerpt.value = '';
+            date.value = getTodayDate();
+            featuredInput.value = '';
+            featuredPreviewContainer.style.display = 'none';
+            featuredPreview.src = '#';
+            featuredUrl.value = '';
+            currentFeaturedFile = null;
+            editingId = null;
+            pendingCaption = false;
+            publishBtn.style.display = 'block';
+            updateBtn.style.display = 'none';
+            cancelBtn.style.display = 'none';
+            statusBadge.className = 'status-badge draft';
+            statusBadge.textContent = 'Draft';
+            publishMsg.innerHTML = '';
+            showNotice('🆕 New article ready.', 'info');
+            setTimeout(hideNotice, 4000);
+        }
+
+        // ---------- EDIT ----------
+        window.editArticle = async function(id) {
+            try {
+                const articles = await getArticles();
+                const article = articles.find(a => a.id === id);
+                if (!article) return alert('Article not found.');
+                editingId = id;
+                title.value = article.title || '';
+                content.innerHTML = article.content || article.summary || '<p>Start writing...</p>';
+                category.value = article.category || '';
+                tags.value = (article.tags || []).join(', ');
+                excerpt.value = article.summary || '';
+                date.value = article.date || getTodayDate();
+                if (article.image) {
+                    featuredUrl.value = article.image;
+                    featuredPreview.src = article.image;
+                    featuredPreviewContainer.style.display = 'block';
+                    currentFeaturedFile = null;
+                } else {
+                    featuredPreviewContainer.style.display = 'none';
+                    featuredUrl.value = '';
+                }
+                publishBtn.style.display = 'none';
+                updateBtn.style.display = 'block';
+                cancelBtn.style.display = 'block';
+                statusBadge.className = 'status-badge published';
+                statusBadge.textContent = 'Published';
+                publishMsg.innerHTML = '';
+                showNotice(`✏️ Editing: "${article.title}"`, 'info');
+                setTimeout(hideNotice, 3000);
+                document.querySelector('.wp-editor-wrapper').scrollIntoView({ behavior: 'smooth' });
+            } catch(err) {
+                alert('Error loading article: ' + err.message);
+            }
+        };
+
+        cancelBtn.addEventListener('click', resetForm);
+
+        // ---------- PUBLISH ----------
+        async function saveArticle(isUpdate = false) {
+            const titleVal = title.value.trim();
+            const categoryVal = category.value.trim();
+            const excerptVal = excerpt.value.trim() || 'No summary provided.';
+            const contentVal = content.innerHTML.trim() || excerptVal;
+            const tagsVal = tags.value.split(',').map(t => t.trim()).filter(Boolean);
+            const dateVal = date.value || getTodayDate();
+            let imageUrl = featuredUrl.value;
+
+            if (!titleVal || !categoryVal) {
+                showNotice('❌ Please fill in Title and Category.', 'error');
+                return;
+            }
+
+            publishBtn.disabled = true;
+            updateBtn.disabled = true;
+            publishMsg.innerHTML = '⏳ Saving...';
+
+            try {
+                if (currentFeaturedFile) {
+                    const url = await uploadImage(currentFeaturedFile);
+                    if (url) imageUrl = url;
+                }
+                if (!imageUrl) imageUrl = 'https://picsum.photos/seed/sports/600/400';
+
+                let result;
+                if (isUpdate) {
+                    result = await updateArticle(editingId, {
+                        title: titleVal,
+                        content: contentVal,
+                        summary: excerptVal,
+                        category: categoryVal,
+                        author: 'Admin',
+                        image: imageUrl,
+                        date: dateVal,
+                        tags: tagsVal
+                    });
+                } else {
+                    result = await addArticle({
+                        title: titleVal,
+                        content: contentVal,
+                        summary: excerptVal,
+                        category: categoryVal,
+                        author: 'Admin',
+                        image: imageUrl,
+                        date: dateVal,
+                        tags: tagsVal
+                    });
+                }
+
+                if (result.success) {
+                    showNotice(`✅ Article ${isUpdate ? 'updated' : 'published'} successfully!`, 'success');
+                    statusBadge.className = 'status-badge published';
+                    statusBadge.textContent = 'Published';
+                    if (!isUpdate) resetForm();
+                    await refreshArticleList();
+                    if (window.loadAndRender) window.loadAndRender();
+                    setTimeout(hideNotice, 4000);
+                } else {
+                    showNotice('❌ Failed: ' + result.error, 'error');
+                }
+            } catch(err) {
+                showNotice('❌ Error: ' + err.message, 'error');
+            }
+
+            publishBtn.disabled = false;
+            updateBtn.disabled = false;
+            publishMsg.innerHTML = '';
+        }
+
+        publishBtn.addEventListener('click', () => saveArticle(false));
+        updateBtn.addEventListener('click', () => saveArticle(true));
+
+        // ---------- ARTICLE LIST ----------
+        async function refreshArticleList() {
+            const list = document.getElementById('articleList');
+            try {
+                const articles = await getArticles();
+                if (articles.length === 0) {
+                    list.innerHTML = '<span style="color:#94a3b8;">No articles yet.</span>';
+                } else {
+                    list.innerHTML = articles.map(a => `
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #f1f5f9;">
+                            <span style="cursor:pointer; color:#0b1a2e;" onclick="editArticle('${a.id}')">${a.title}</span>
+                            <button onclick="deleteArticle('${a.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:0.8rem;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `).join('');
+                }
+            } catch(e) {
+                list.innerHTML = '<span style="color:#ef4444;">❌ Error loading articles</span>';
+            }
+        }
+
+        window.deleteArticle = async function(id) {
+            if (!confirm('Delete this article permanently?')) return;
+            const result = await deleteArticleById(id);
+            if (result.success) {
+                alert('🗑️ Deleted!');
+                if (editingId === id) resetForm();
+                await refreshArticleList();
+                if (window.loadAndRender) window.loadAndRender();
+            } else {
+                alert('Delete failed: ' + result.error);
+            }
+        };
+
+        // ---------- FEATURED IMAGE ----------
+        featuredInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Image too large. Max 5MB.');
+                this.value = '';
+                return;
+            }
+            currentFeaturedFile = file;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                featuredPreview.src = ev.target.result;
+                featuredPreviewContainer.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+            featuredUrl.value = '';
+        });
+
+        removeFeaturedBtn.addEventListener('click', function() {
+            featuredInput.value = '';
+            featuredPreviewContainer.style.display = 'none';
+            featuredPreview.src = '#';
+            featuredUrl.value = '';
+            currentFeaturedFile = null;
+        });
+
+        // ---------- LOGOUT ----------
+        document.getElementById('dashboardLogout').addEventListener('click', function(e) {
+            e.preventDefault();
+            adminLogout();
+        });
+
+        // ---------- INIT ----------
+        async function init() {
+            await refreshArticleList();
+            resetForm();
+        }
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

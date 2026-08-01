@@ -13,13 +13,12 @@
     <link rel="stylesheet" href="css/dashboard.css" />
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    
-    <!-- ===== SEO META TAGS ===== -->
+
+    <!-- SEO Tags -->
     <title id="dynamicTitle">Sports Arena · Article</title>
     <meta name="description" id="dynamicDescription" content="Read the latest sports news and analysis on Sports Arena.">
     <meta name="keywords" content="sports, news, analysis, football, basketball, cricket">
     <link rel="canonical" id="dynamicCanonical" href="">
-
     <meta property="og:title" id="ogTitle" content="Sports Arena">
     <meta property="og:description" id="ogDescription" content="Read the latest sports news and analysis on Sports Arena.">
     <meta property="og:url" id="ogUrl" content="">
@@ -27,14 +26,13 @@
     <meta property="og:image" id="ogImage" content="https://picsum.photos/seed/sports/1200/630">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
-
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" id="twitterTitle" content="Sports Arena">
     <meta name="twitter:description" id="twitterDescription" content="Read the latest sports news and analysis on Sports Arena.">
     <meta name="twitter:image" id="twitterImage" content="https://picsum.photos/seed/sports/1200/630">
 
     <style>
-        /* ===== ALL STYLES (including caption styles) ===== */
+        /* ===== MAIN STYLES ===== */
         .single-article { padding:40px 0 60px; background:#f8fafc; }
         .single-article .container { max-width:720px; background:#fff; padding:40px; border-radius:24px; box-shadow:0 4px 20px rgba(0,0,0,0.04); border:1px solid #e9edf2; }
         .single-article .article-image { width:100%; max-height:400px; object-fit:cover; border-radius:16px; margin-bottom:24px; }
@@ -86,7 +84,7 @@
         .error-state h2 { margin:16px 0; }
         .error-state p { color:#64748b; }
 
-        /* ===== 🔥 CAPTION STYLES (ADDED) ===== */
+        /* ===== 🔥 CAPTION STYLES (MOVED HERE – FIXED) ===== */
         .article-content figure {
             margin: 24px 0;
             text-align: center;
@@ -178,7 +176,6 @@
     <script src="js/auth.js"></script>
     <script>
         (async function() {
-            // Get slug from URL
             const params = new URLSearchParams(window.location.search);
             const slug = params.get('slug');
 
@@ -215,7 +212,7 @@
                     return;
                 }
 
-                // Update SEO meta tags safely
+                // Update SEO
                 function updateMetaTagsSafely() {
                     const desc = article.summary || article.content?.slice(0, 160) || 'Read the latest sports news on Sports Arena.';
                     const image = article.image || 'https://picsum.photos/seed/sports/1200/630';
@@ -246,7 +243,7 @@
                 }
                 updateMetaTagsSafely();
 
-                // Render article
+                // Render
                 const viewCount = article.views || 0;
                 const comments = await getComments(slug);
                 const url = window.location.href;

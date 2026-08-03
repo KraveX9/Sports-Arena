@@ -1,8 +1,7 @@
 // ============================================
-//  SPORTS ARENA – FIRESTORE + IMGBB + SECRET KEY
+//  SPORTS ARENA – FIRESTORE + IMGBB (COMPRESSED)
 // ============================================
 
-// ----- FIREBASE CONFIG -----
 const firebaseConfig = {
   apiKey: "AIzaSyBNYN6fBKqKXQEztVrdsVYqeZJO6q4LCx8",
   authDomain: "sportsarenablog-776bf.firebaseapp.com",
@@ -19,7 +18,7 @@ const db = firebase.firestore();
 // ----- IMGBB API KEY -----
 const IMGBB_API_KEY = '17e055fb3d68d047117985b03c255ba3';
 
-// 🔑 SECRET KEY – MUST MATCH THE ONE IN YOUR FIRESTORE RULES
+// 🔑 SECRET KEY
 const SECRET_KEY = 'MySuperSecret2026!';
 
 // ============================================
@@ -30,67 +29,77 @@ async function getCategories() {
     return CATEGORIES.map(name => ({ id: name, name }));
 }
 
-// ============================================
-//  SLUG GENERATOR
-// ============================================
 function generateSlug(title) {
     return title.toLowerCase().replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').slice(0,50);
 }
 
 // ============================================
-//  ARTICLE FUNCTIONS (WITH BETTER ERROR HANDLING)
+//  🔥 IMAGE UPLOAD – COMPRESSES BEFORE UPLOADING TO IMGBB
 // ============================================
-
-// 🔥 FALLBACK MOCK DATA – used if Firestore fails
-const FALLBACK_ARTICLES = [
-    {
-        id: 'fallback1',
-        title: 'Welcome to Sports Arena!',
-        summary: 'Your premier destination for sports news. Start writing your first article!',
-        content: '<p>Welcome to Sports Arena! This is a fallback article because Firestore is not responding.</p><p>To fix this, check your Firebase configuration and Firestore rules.</p>',
-        category: 'Football',
-        author: 'Admin',
-        date: new Date().toISOString().split('T')[0],
-        slug: 'welcome-to-sports-arena',
-        views: 0,
-        tags: ['sports', 'blog']
+async function uploadImage(file) {
+    if (!file) return null;
+    if (file.size > 5 * 1024 * 1024) {
+        throw new Error('Image too large. Max 5MB.');
     }
-];
 
+    // Compress the image before uploading
+    const options = {
+        maxSizeMB: 0.2,
+        maxWidthOrHeight: 1200,
+        useWebWorker: true,
+        fileType: 'image/jpeg',
+        initialQuality: 0.8
+    };
+    const compressed = await imageCompression(file, options);
+
+    // Upload compressed file to ImgBB
+    const reader = new FileReader();
+    return new Promise((resolve, reject) => {
+        reader.readAsDataURL(compressed);
+        reader.onload = async () => {
+            try {
+                const base64Image = reader.result.split(',')[1];
+                const formData = new FormData();
+                formData.append('key', IMGBB_API_KEY);
+                formData.append('image', base64Image);
+                const response = await fetch('https://api.imgbb.com/1/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.success) {
+                    resolve(data.data.url);
+                } else {
+                    reject(new Error(data.error?.message || 'ImgBB upload failed'));
+                }
+            } catch (e) { reject(e); }
+        };
+        reader.onerror = () => reject(new Error('Failed to read file'));
+    });
+}
+
+// ============================================
+//  ARTICLE FUNCTIONS
+// ============================================
 async function getArticles() {
     try {
-        console.log('🔄 Fetching articles from Firestore...');
         const snapshot = await db.collection('articles').orderBy('date','desc').get();
-        const articles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        console.log(`✅ Loaded ${articles.length} articles from Firestore.`);
-        if (articles.length === 0) {
-            console.warn('⚠️ No articles found in Firestore. Using fallback data.');
-            return FALLBACK_ARTICLES;
-        }
-        return articles;
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch(e){ 
-        console.error('❌ Firestore error:', e);
-        console.warn('⚠️ Using fallback data.');
-        return FALLBACK_ARTICLES;
+        console.error(e);
+        return []; 
     }
 }
 
 async function getArticleBySlug(slug) {
     try {
-        // First try to find in Firestore
         const snapshot = await db.collection('articles').where('slug','==',slug).limit(1).get();
         if (!snapshot.empty) {
             const doc = snapshot.docs[0];
             return { id: doc.id, ...doc.data() };
         }
-        // If not found, check fallback
-        const fallback = FALLBACK_ARTICLES.find(a => a.slug === slug);
-        return fallback || null;
-    } catch(e){ 
-        console.error('Error fetching article by slug:', e);
-        // Return fallback if available
-        return FALLBACK_ARTICLES.find(a => a.slug === slug) || null;
-    }
+        return null;
+    } catch(e){ return null; }
 }
 
 async function incrementViewsAndLog(articleId, slug, country) {
@@ -106,37 +115,9 @@ async function incrementViewsAndLog(articleId, slug, country) {
             country: country || 'Unknown'
         });
         return { success: true };
-    } catch(e){ 
-        console.error('View logging error:', e); 
-        return { success: false }; 
-    }
+    } catch(e){ return { success: false }; }
 }
 
-async function uploadImage(file) {
-    if (!file) return null;
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = async () => {
-            try {
-                const base64Image = reader.result.split(',')[1];
-                const formData = new FormData();
-                formData.append('key', IMGBB_API_KEY);
-                formData.append('image', base64Image);
-                const response = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
-                const data = await response.json();
-                if (data.success) {
-                    resolve(data.data.url);
-                } else {
-                    reject(new Error(data.error?.message || 'ImgBB upload failed'));
-                }
-            } catch(e) { reject(e); }
-        };
-        reader.onerror = () => reject(new Error('Failed to read file'));
-    });
-}
-
-// 🔥 ADD ARTICLE – includes the secret key
 async function addArticle(article) {
     try {
         const slug = generateSlug(article.title);
@@ -155,13 +136,9 @@ async function addArticle(article) {
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         return { success: true, id: docRef.id };
-    } catch(e) { 
-        console.error('Add article error:', e);
-        return { success: false, error: e.message }; 
-    }
+    } catch(e) { return { success: false, error: e.message }; }
 }
 
-// 🔥 UPDATE ARTICLE – includes the secret key
 async function updateArticle(id, article) {
     try {
         const slug = generateSlug(article.title);
@@ -178,20 +155,14 @@ async function updateArticle(id, article) {
             secretKey: SECRET_KEY
         });
         return { success: true };
-    } catch(e) { 
-        console.error('Update article error:', e);
-        return { success: false, error: e.message }; 
-    }
+    } catch(e) { return { success: false, error: e.message }; }
 }
 
 async function deleteArticleById(id) {
     try {
         await db.collection('articles').doc(id).delete();
         return { success: true };
-    } catch(e) { 
-        console.error('Delete article error:', e);
-        return { success: false, error: e.message }; 
-    }
+    } catch(e) { return { success: false, error: e.message }; }
 }
 
 // ============================================
@@ -201,10 +172,7 @@ async function getComments(slug) {
     try {
         const snapshot = await db.collection('comments').where('articleSlug','==',slug).orderBy('createdAt','asc').get();
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    } catch(e){ 
-        console.error('Comments error:', e);
-        return []; 
-    }
+    } catch(e){ return []; }
 }
 async function addComment(slug, name, comment, email='') {
     try {
@@ -216,14 +184,11 @@ async function addComment(slug, name, comment, email='') {
             createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
         return { success: true };
-    } catch(e){ 
-        console.error('Comment error:', e);
-        return { success: false, error: e.message }; 
-    }
+    } catch(e){ return { success: false, error: e.message }; }
 }
 
 // ============================================
-//  ANALYTICS FUNCTIONS
+//  ANALYTICS
 // ============================================
 async function getViewStats(period) {
     try {
@@ -233,35 +198,4 @@ async function getViewStats(period) {
             startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         } else if (period === 'weekly') {
             const day = now.getDay();
-            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day);
-        } else {
-            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        }
-        const startStr = startDate.toISOString().split('T')[0];
-        const snapshot = await db.collection('views').where('date','>=',startStr).get();
-        return snapshot.docs.map(doc => doc.data());
-    } catch(e) {
-        console.error('View stats error:', e);
-        return [];
-    }
-}
-
-async function getCountryStats(period) {
-    const views = await getViewStats(period);
-    const countryCount = {};
-    views.forEach(v => {
-        const c = v.country || 'Unknown';
-        countryCount[c] = (countryCount[c] || 0) + 1;
-    });
-    return Object.entries(countryCount).sort((a,b) => b[1] - a[1]);
-}
-
-async function getArticleStats(period) {
-    const views = await getViewStats(period);
-    const articleCount = {};
-    views.forEach(v => {
-        const slug = v.articleSlug || 'unknown';
-        articleCount[slug] = (articleCount[slug] || 0) + 1;
-    });
-    return articleCount;
-                    }
+            startDate = new Date(now.get

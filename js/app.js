@@ -1,5 +1,5 @@
 // ============================================
-//  PUBLIC BLOG ENGINE (WITH SEARCH + SOCIAL SHARE + SLUGS + VIEWS)
+//  PUBLIC BLOG ENGINE (WITH ERROR HANDLING & FALLBACK)
 // ============================================
 
 let currentCategory = 'All';
@@ -7,29 +7,28 @@ let currentSearch = '';
 let displayedCount = 6;
 let allArticles = [];
 
-// Helper: build the full URL of an article
-function getArticleUrl(slug) {
-    const base = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/');
-    return base + 'article.html?slug=' + slug;
-}
-
 async function loadAndRender() {
     try {
         allArticles = await getArticles();
+        console.log(`✅ Loaded ${allArticles.length} articles for rendering.`);
         renderCategories();
         applyFilters();
         updateStats();
     } catch (error) {
+        console.error('Load error:', error);
         const grid = document.getElementById('articlesGrid');
         if (grid) {
             grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:60px 20px; color:#dc2626; background:#fef2f2; border-radius:16px;">
                 <i class="fas fa-exclamation-triangle" style="font-size:2rem; display:block; margin-bottom:12px;"></i>
                 <strong>Failed to load articles</strong><br>
                 <span style="font-size:0.9rem; color:#991b1b;">${error.message}</span>
-                <br><small style="color:#6b7280;">Check Firebase connection and Firestore permissions.</small>
+                <br><small style="color:#6b7280;">Check Firestore connection and permissions.</small>
             </div>`;
         }
     }
+    // Remove preloader
+    const preloader = document.getElementById('preloader');
+    if (preloader) preloader.style.display = 'none';
 }
 
 function renderCategories() {
@@ -87,11 +86,10 @@ function applyFilters() {
     renderArticles(filtered);
 }
 
-// 🔥 FIXED: Uses the article's own URL
 function getShareButtons(article) {
-    const articleUrl = getArticleUrl(article.slug);
+    const url = window.location.href;
     const title = encodeURIComponent(article.title);
-    const shareUrl = encodeURIComponent(articleUrl);
+    const shareUrl = encodeURIComponent(url);
     
     return `
         <div class="article-share">
@@ -112,7 +110,6 @@ function getShareButtons(article) {
     `;
 }
 
-// 🔥 FIXED: copyLink uses the correct URL
 window.copyLink = function(url) {
     const realUrl = decodeURIComponent(url);
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -155,7 +152,7 @@ function renderArticles(filteredArticles) {
     }
 
     if (sliced.length === 0) {
-        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:60px 0; color:#64748b;">No articles found. Try a different search or category.</div>`;
+        grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:60px 0; color:#64748b;">No articles found. Create your first one in the dashboard!</div>`;
         return;
     }
 
@@ -237,9 +234,4 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-
-    setTimeout(() => {
-        const preloader = document.getElementById('preloader');
-        if (preloader) preloader.style.display = 'none';
-    }, 600);
 });

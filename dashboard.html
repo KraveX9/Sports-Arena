@@ -1,267 +1,642 @@
-// ============================================
-//  SPORTS ARENA – FIRESTORE + IMGBB + SECRET KEY
-// ============================================
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard · Sports Arena</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Image compression library -->
+    <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.min.js"></script>
+    
+    <!-- Mobile console (Eruda) -->
+    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
+    <script>eruda.init();</script>
 
-// ----- FIREBASE CONFIG -----
-const firebaseConfig = {
-  apiKey: "AIzaSyBNYN6fBKqKXQEztVrdsVYqeZJO6q4LCx8",
-  authDomain: "sportsarenablog-776bf.firebaseapp.com",
-  projectId: "sportsarenablog-776bf",
-  storageBucket: "sportsarenablog-776bf.firebasestorage.app",
-  messagingSenderId: "1056924791232",
-  appId: "1:1056924791232:web:46ac3b010b86bc3c439825",
-  measurementId: "G-JGJ2N4KH0F"
-};
+    <style>
+        .wp-editor-wrapper { display: flex; gap: 32px; max-width: 1200px; margin: 0 auto; padding: 24px; }
+        .wp-editor-main { flex: 2; min-width: 0; }
+        .wp-editor-sidebar { flex: 1; min-width: 220px; }
+        .wp-editor-sidebar .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .wp-editor-sidebar .card h4 { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 12px; }
+        .wp-editor-sidebar input[type="text"], .wp-editor-sidebar select { width: 100%; padding: 8px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; margin-bottom: 8px; }
+        .wp-editor-sidebar textarea { width: 100%; padding: 8px 12px; border: 1.5px solid #e2e8f0; border-radius: 8px; font-size: 0.9rem; resize: vertical; min-height: 80px; font-family: inherit; }
+        .wp-editor-sidebar .btn-primary { width: 100%; justify-content: center; padding: 12px; border-radius: 40px; border: none; font-weight: 600; cursor: pointer; background: #f97316; color: #fff; }
+        .wp-editor-sidebar .btn-primary:hover { background: #ea580c; }
+        .wp-editor-sidebar .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+        .wp-editor-sidebar .preview-img { max-width: 100%; border-radius: 8px; margin-top: 8px; border: 1px solid #e2e8f0; }
+        .wp-editor-sidebar .remove-btn { background: none; border: none; color: #ef4444; cursor: pointer; font-size: 0.8rem; margin-top: 4px; }
+        .wp-editor-sidebar .file-input { padding: 8px; border: 1.5px dashed #e2e8f0; border-radius: 8px; width: 100%; font-size: 0.85rem; }
+        .wp-editor-toolbar { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 16px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-bottom: none; border-radius: 12px 12px 0 0; }
+        .wp-editor-toolbar button { background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 12px; font-size: 0.85rem; cursor: pointer; transition: 0.2s; color: #1e293b; font-weight: 500; }
+        .wp-editor-toolbar button:hover { background: #f1f5f9; border-color: #94a3b8; }
+        .wp-editor-toolbar button i { margin-right: 4px; }
+        .wp-editor-toolbar .format-btn { background: #f97316; color: #fff; border-color: #f97316; }
+        .wp-editor-toolbar .format-btn:hover { background: #ea580c; border-color: #ea580c; }
+        .wp-editor-toolbar .image-btn { background: #e0f2fe; border-color: #7dd3fc; }
+        .wp-editor-toolbar .image-btn:hover { background: #bae6fd; }
+        .wp-editor-toolbar .caption-btn { background: #fef3c7; border-color: #f59e0b; }
+        .wp-editor-toolbar .caption-btn:hover { background: #fde68a; }
+        .wp-editor-content { border: 1.5px solid #e2e8f0; border-radius: 0 0 12px 12px; background: #fff; min-height: 400px; padding: 16px; font-family: 'Inter', sans-serif; }
+        .wp-editor-content:focus { outline: none; border-color: #f97316; }
+        .wp-editor-content h2 { font-size: 1.8rem; font-weight: 700; margin: 16px 0 8px; }
+        .wp-editor-content h3 { font-size: 1.4rem; font-weight: 700; margin: 14px 0 6px; }
+        .wp-editor-content h4 { font-size: 1.2rem; font-weight: 700; margin: 12px 0 4px; }
+        .wp-editor-content figure { margin: 20px 0; text-align: center; }
+        .wp-editor-content figure img { max-width: 100%; border-radius: 12px; }
+        .wp-editor-content figure figcaption { font-size: 0.9rem; color: #64748b; margin-top: 8px; font-style: italic; }
+        .wp-editor-title { font-size: 2rem; font-weight: 700; border: none; border-bottom: 2px solid transparent; padding: 8px 0; width: 100%; margin-bottom: 16px; background: transparent; color: #0b1a2e; }
+        .wp-editor-title:focus { outline: none; border-bottom-color: #f97316; }
+        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 40px; font-size: 0.75rem; font-weight: 600; margin-top: 8px; }
+        .status-badge.draft { background: #f1f5f9; color: #475569; }
+        .status-badge.published { background: #dcfce7; color: #16a34a; }
+        .wp-notice { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-weight: 500; }
+        .wp-notice.success { background: #dcfce7; color: #16a34a; border: 1px solid #86efac; }
+        .wp-notice.error { background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5; }
+        .wp-notice.info { background: #dbeafe; color: #2563eb; border: 1px solid #93c5fd; }
+        @media (max-width: 768px) { .wp-editor-wrapper { flex-direction: column; padding: 12px; } .wp-editor-sidebar { flex: 1; } .wp-editor-title { font-size: 1.5rem; } }
+    </style>
+</head>
+<body>
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="brand">
+                <i class="fas fa-trophy brand-icon"></i>
+                <span>Sports<span class="brand-highlight">Arena</span></span>
+            </a>
+            <nav class="nav-links">
+                <ul>
+                    <li><a href="index.html"><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="analytics.html"><i class="fas fa-chart-line"></i> Analytics</a></li>
+                    <li><a href="#" id="dashboardLogout" class="btn-outline-nav"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
 
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+    <div style="background:#f8fafc; padding:20px 0; min-height:100vh;">
+        <div class="wp-editor-wrapper">
 
-// ----- IMGBB API KEY -----
-const IMGBB_API_KEY = '17e055fb3d68d047117985b03c255ba3';
+            <!-- MAIN EDITOR -->
+            <div class="wp-editor-main">
+                <div id="editorNotice" class="wp-notice info">
+                    <i class="fas fa-info-circle"></i> Upload images – they will be compressed automatically for fast loading.
+                </div>
 
-// 🔑 SECRET KEY – MUST MATCH THE ONE IN YOUR FIRESTORE RULES
-const SECRET_KEY = 'MySuperSecret2026!';
+                <input type="text" id="articleTitle" class="wp-editor-title" placeholder="Add title...">
 
-// ============================================
-//  CATEGORIES (HARDCODED)
-// ============================================
-const CATEGORIES = ['Football','Basketball','Cricket','Tennis','Motorsport','Golf'];
-async function getCategories() {
-    return CATEGORIES.map(name => ({ id: name, name }));
-}
+                <div class="wp-editor-toolbar">
+                    <button id="boldBtn"><b>B</b></button>
+                    <button id="italicBtn"><i>I</i></button>
+                    <button id="underlineBtn"><u>U</u></button>
+                    <button id="strikeBtn"><s>S</s></button>
+                    <span style="color:#94a3b8;">|</span>
+                    <button id="ulBtn"><i class="fas fa-list-ul"></i></button>
+                    <button id="olBtn"><i class="fas fa-list-ol"></i></button>
+                    <span style="color:#94a3b8;">|</span>
+                    <button id="h2Btn">H2</button>
+                    <button id="h3Btn">H3</button>
+                    <button id="h4Btn">H4</button>
+                    <span style="color:#94a3b8;">|</span>
+                    <button id="alignLeft"><i class="fas fa-align-left"></i></button>
+                    <button id="alignCenter"><i class="fas fa-align-center"></i></button>
+                    <button id="alignRight"><i class="fas fa-align-right"></i></button>
+                    <span style="color:#94a3b8;">|</span>
+                    <button id="linkBtn"><i class="fas fa-link"></i></button>
+                    <button id="unlinkBtn"><i class="fas fa-unlink"></i></button>
+                    <span style="color:#94a3b8;">|</span>
+                    <button id="imageOnlyBtn" class="image-btn"><i class="fas fa-image"></i> Image</button>
+                    <button id="imageCaptionBtn" class="caption-btn"><i class="fas fa-image"></i> + Caption</button>
+                    <span style="color:#94a3b8;">|</span>
+                    <button id="formatBtn" class="format-btn"><i class="fas fa-magic"></i> Format</button>
+                </div>
 
-// ============================================
-//  SLUG GENERATOR
-// ============================================
-function generateSlug(title) {
-    return title.toLowerCase().replace(/[^a-z0-9\s-]/g,'').replace(/\s+/g,'-').slice(0,50);
-}
+                <div id="editorContent" class="wp-editor-content" contenteditable="true" spellcheck="true">
+                    <p>Start writing your article...</p>
+                </div>
 
-// ============================================
-//  ARTICLE FUNCTIONS (WITH BETTER ERROR HANDLING)
-// ============================================
+                <input type="file" id="imageUploadInput" accept="image/*" style="display:none;">
+            </div>
 
-// 🔥 FALLBACK MOCK DATA – used if Firestore fails
-const FALLBACK_ARTICLES = [
-    {
-        id: 'fallback1',
-        title: 'Welcome to Sports Arena!',
-        summary: 'Your premier destination for sports news. Start writing your first article!',
-        content: '<p>Welcome to Sports Arena! This is a fallback article because Firestore is not responding.</p><p>To fix this, check your Firebase configuration and Firestore rules.</p>',
-        category: 'Football',
-        author: 'Admin',
-        date: new Date().toISOString().split('T')[0],
-        slug: 'welcome-to-sports-arena',
-        views: 0,
-        tags: ['sports', 'blog']
-    }
-];
+            <!-- SIDEBAR -->
+            <div class="wp-editor-sidebar">
+                <div class="card">
+                    <h4><i class="fas fa-cloud-upload-alt"></i> Publish</h4>
+                    <div style="margin-bottom:8px;">
+                        <label style="font-size:0.8rem; color:#64748b;">Status</label>
+                        <span class="status-badge draft" id="statusBadge">Draft</span>
+                    </div>
+                    <button id="publishBtn" class="btn-primary">
+                        <i class="fas fa-cloud-upload-alt"></i> Publish
+                    </button>
+                    <button id="updateBtn" class="btn-primary" style="background:#3b82f6; display:none; margin-top:8px;">
+                        <i class="fas fa-save"></i> Update
+                    </button>
+                    <button id="cancelEditBtn" style="background:none; border:none; color:#64748b; cursor:pointer; margin-top:8px; width:100%; text-decoration:underline; display:none;">
+                        Cancel Editing
+                    </button>
+                    <div id="publishMessage" style="margin-top:8px; font-weight:500; font-size:0.9rem;"></div>
+                </div>
+                <div class="card">
+                    <h4><i class="fas fa-tags"></i> Category</h4>
+                    <select id="articleCategory">
+                        <option value="">Select category...</option>
+                        <option value="Football">Football</option>
+                        <option value="Basketball">Basketball</option>
+                        <option value="Cricket">Cricket</option>
+                        <option value="Tennis">Tennis</option>
+                        <option value="Motorsport">Motorsport</option>
+                        <option value="Golf">Golf</option>
+                    </select>
+                </div>
+                <div class="card">
+                    <h4><i class="fas fa-hashtag"></i> Tags</h4>
+                    <input type="text" id="articleTags" placeholder="EPL, Messi, Transfer">
+                    <small style="color:#94a3b8; font-size:0.75rem;">Comma separated</small>
+                </div>
+                <div class="card">
+                    <h4><i class="fas fa-calendar-alt"></i> Publish Date</h4>
+                    <input type="date" id="articleDate">
+                </div>
+                <div class="card">
+                    <h4><i class="fas fa-image"></i> Featured Image</h4>
+                    <input type="file" id="featuredImageInput" accept="image/*" class="file-input">
+                    <div id="featuredPreviewContainer" style="display:none; margin-top:8px;">
+                        <img id="featuredPreview" src="#" alt="Featured" class="preview-img">
+                        <button id="removeFeaturedBtn" class="remove-btn"><i class="fas fa-times-circle"></i> Remove</button>
+                    </div>
+                    <input type="hidden" id="featuredImageUrl" value="">
+                </div>
+                <div class="card">
+                    <h4><i class="fas fa-align-left"></i> Excerpt</h4>
+                    <textarea id="articleExcerpt" placeholder="Short summary for homepage..."></textarea>
+                    <small style="color:#94a3b8; font-size:0.75rem;">Max 150 characters</small>
+                </div>
+                <div class="card" style="padding:16px;">
+                    <h4><i class="fas fa-list-ul"></i> Your Articles</h4>
+                    <div id="articleList" style="max-height:300px; overflow-y:auto; font-size:0.85rem;">
+                        <span style="color:#94a3b8;">Loading...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-async function getArticles() {
-    try {
-        console.log('🔄 Fetching articles from Firestore...');
-        const snapshot = await db.collection('articles').orderBy('date','desc').get();
-        const articles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        console.log(`✅ Loaded ${articles.length} articles from Firestore.`);
-        if (articles.length === 0) {
-            console.warn('⚠️ No articles found in Firestore. Using fallback data.');
-            return FALLBACK_ARTICLES;
-        }
-        return articles;
-    } catch(e){ 
-        console.error('❌ Firestore error:', e);
-        console.warn('⚠️ Using fallback data.');
-        return FALLBACK_ARTICLES;
-    }
-}
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        // ============================================================
+        //  EDITOR LOGIC – WITH IMAGE COMPRESSION
+        // ============================================================
 
-async function getArticleBySlug(slug) {
-    try {
-        // First try to find in Firestore
-        const snapshot = await db.collection('articles').where('slug','==',slug).limit(1).get();
-        if (!snapshot.empty) {
-            const doc = snapshot.docs[0];
-            return { id: doc.id, ...doc.data() };
-        }
-        // If not found, check fallback
-        const fallback = FALLBACK_ARTICLES.find(a => a.slug === slug);
-        return fallback || null;
-    } catch(e){ 
-        console.error('Error fetching article by slug:', e);
-        // Return fallback if available
-        return FALLBACK_ARTICLES.find(a => a.slug === slug) || null;
-    }
-}
+        let editingId = null;
+        let currentFeaturedFile = null;
+        let pendingCaption = false;
 
-async function incrementViewsAndLog(articleId, slug, country) {
-    try {
-        await db.collection('articles').doc(articleId).update({
-            views: firebase.firestore.FieldValue.increment(1)
-        });
-        await db.collection('views').add({
-            articleSlug: slug,
-            articleId: articleId,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-            date: new Date().toISOString().split('T')[0],
-            country: country || 'Unknown'
-        });
-        return { success: true };
-    } catch(e){ 
-        console.error('View logging error:', e); 
-        return { success: false }; 
-    }
-}
+        // DOM refs
+        const content = document.getElementById('editorContent');
+        const title = document.getElementById('articleTitle');
+        const category = document.getElementById('articleCategory');
+        const tags = document.getElementById('articleTags');
+        const excerpt = document.getElementById('articleExcerpt');
+        const date = document.getElementById('articleDate');
+        const featuredInput = document.getElementById('featuredImageInput');
+        const featuredPreview = document.getElementById('featuredPreview');
+        const featuredPreviewContainer = document.getElementById('featuredPreviewContainer');
+        const featuredUrl = document.getElementById('featuredImageUrl');
+        const removeFeaturedBtn = document.getElementById('removeFeaturedBtn');
+        const publishBtn = document.getElementById('publishBtn');
+        const updateBtn = document.getElementById('updateBtn');
+        const cancelBtn = document.getElementById('cancelEditBtn');
+        const statusBadge = document.getElementById('statusBadge');
+        const publishMsg = document.getElementById('publishMessage');
+        const notice = document.getElementById('editorNotice');
 
-async function uploadImage(file) {
-    if (!file) return null;
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = async () => {
+        // ---------- COMPRESSED UPLOAD FUNCTION ----------
+        async function uploadCompressedImage(file) {
+            if (!file) return null;
             try {
-                const base64Image = reader.result.split(',')[1];
-                const formData = new FormData();
-                formData.append('key', IMGBB_API_KEY);
-                formData.append('image', base64Image);
-                const response = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
-                const data = await response.json();
-                if (data.success) {
-                    resolve(data.data.url);
-                } else {
-                    reject(new Error(data.error?.message || 'ImgBB upload failed'));
-                }
-            } catch(e) { reject(e); }
-        };
-        reader.onerror = () => reject(new Error('Failed to read file'));
-    });
-}
-
-// 🔥 ADD ARTICLE – includes the secret key
-async function addArticle(article) {
-    try {
-        const slug = generateSlug(article.title);
-        const docRef = await db.collection('articles').add({
-            title: article.title,
-            summary: article.summary,
-            content: article.content || article.summary,
-            category: article.category,
-            author: article.author,
-            image: article.image || 'https://picsum.photos/seed/sports/600/400',
-            date: article.date || new Date().toISOString().split('T')[0],
-            slug: slug,
-            views: 0,
-            tags: article.tags || [],
-            secretKey: SECRET_KEY,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        return { success: true, id: docRef.id };
-    } catch(e) { 
-        console.error('Add article error:', e);
-        return { success: false, error: e.message }; 
-    }
-}
-
-// 🔥 UPDATE ARTICLE – includes the secret key
-async function updateArticle(id, article) {
-    try {
-        const slug = generateSlug(article.title);
-        await db.collection('articles').doc(id).update({
-            title: article.title,
-            summary: article.summary,
-            content: article.content || article.summary,
-            category: article.category,
-            author: article.author,
-            image: article.image || 'https://picsum.photos/seed/sports/600/400',
-            date: article.date || new Date().toISOString().split('T')[0],
-            slug: slug,
-            tags: article.tags || [],
-            secretKey: SECRET_KEY
-        });
-        return { success: true };
-    } catch(e) { 
-        console.error('Update article error:', e);
-        return { success: false, error: e.message }; 
-    }
-}
-
-async function deleteArticleById(id) {
-    try {
-        await db.collection('articles').doc(id).delete();
-        return { success: true };
-    } catch(e) { 
-        console.error('Delete article error:', e);
-        return { success: false, error: e.message }; 
-    }
-}
-
-// ============================================
-//  COMMENTS
-// ============================================
-async function getComments(slug) {
-    try {
-        const snapshot = await db.collection('comments').where('articleSlug','==',slug).orderBy('createdAt','asc').get();
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    } catch(e){ 
-        console.error('Comments error:', e);
-        return []; 
-    }
-}
-async function addComment(slug, name, comment, email='') {
-    try {
-        await db.collection('comments').add({
-            articleSlug: slug,
-            name: name.trim(),
-            comment: comment.trim(),
-            email: email.trim() || '',
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        return { success: true };
-    } catch(e){ 
-        console.error('Comment error:', e);
-        return { success: false, error: e.message }; 
-    }
-}
-
-// ============================================
-//  ANALYTICS FUNCTIONS
-// ============================================
-async function getViewStats(period) {
-    try {
-        const now = new Date();
-        let startDate;
-        if (period === 'daily') {
-            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        } else if (period === 'weekly') {
-            const day = now.getDay();
-            startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day);
-        } else {
-            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+                // Compress image
+                const options = {
+                    maxSizeMB: 0.2,
+                    maxWidthOrHeight: 1200,
+                    useWebWorker: true,
+                    fileType: 'image/jpeg',
+                    initialQuality: 0.8
+                };
+                const compressed = await imageCompression(file, options);
+                // Upload to ImgBB
+                const reader = new FileReader();
+                return new Promise((resolve, reject) => {
+                    reader.readAsDataURL(compressed);
+                    reader.onload = async () => {
+                        try {
+                            const base64 = reader.result.split(',')[1];
+                            const formData = new FormData();
+                            formData.append('key', IMGBB_API_KEY);
+                            formData.append('image', base64);
+                            const response = await fetch('https://api.imgbb.com/1/upload', {
+                                method: 'POST',
+                                body: formData
+                            });
+                            const data = await response.json();
+                            if (data.success) resolve(data.data.url);
+                            else reject(new Error(data.error?.message || 'ImgBB upload failed'));
+                        } catch (e) { reject(e); }
+                    };
+                    reader.onerror = () => reject(new Error('Failed to read file'));
+                });
+            } catch (error) {
+                console.error('Compression error:', error);
+                // Fallback to original upload
+                return uploadImage(file);
+            }
         }
-        const startStr = startDate.toISOString().split('T')[0];
-        const snapshot = await db.collection('views').where('date','>=',startStr).get();
-        return snapshot.docs.map(doc => doc.data());
-    } catch(e) {
-        console.error('View stats error:', e);
-        return [];
-    }
-}
 
-async function getCountryStats(period) {
-    const views = await getViewStats(period);
-    const countryCount = {};
-    views.forEach(v => {
-        const c = v.country || 'Unknown';
-        countryCount[c] = (countryCount[c] || 0) + 1;
-    });
-    return Object.entries(countryCount).sort((a,b) => b[1] - a[1]);
-}
+        // Replace the global uploadImage function with compressed version
+        window.uploadImage = uploadCompressedImage;
 
-async function getArticleStats(period) {
-    const views = await getViewStats(period);
-    const articleCount = {};
-    views.forEach(v => {
-        const slug = v.articleSlug || 'unknown';
-        articleCount[slug] = (articleCount[slug] || 0) + 1;
-    });
-    return articleCount;
-}
+        // ---------- TOOLBAR COMMANDS ----------
+        function execCmd(command, value = null) {
+            if (command === 'createLink') {
+                const url = prompt('Enter URL:', 'https://');
+                if (url) document.execCommand('createLink', false, url);
+            } else {
+                document.execCommand(command, false, value);
+            }
+            content.focus();
+        }
+
+        // Button event binding
+        document.getElementById('boldBtn').addEventListener('click', () => execCmd('bold'));
+        document.getElementById('italicBtn').addEventListener('click', () => execCmd('italic'));
+        document.getElementById('underlineBtn').addEventListener('click', () => execCmd('underline'));
+        document.getElementById('strikeBtn').addEventListener('click', () => execCmd('strikethrough'));
+        document.getElementById('ulBtn').addEventListener('click', () => execCmd('insertUnorderedList'));
+        document.getElementById('olBtn').addEventListener('click', () => execCmd('insertOrderedList'));
+        document.getElementById('h2Btn').addEventListener('click', () => execCmd('formatBlock', 'h2'));
+        document.getElementById('h3Btn').addEventListener('click', () => execCmd('formatBlock', 'h3'));
+        document.getElementById('h4Btn').addEventListener('click', () => execCmd('formatBlock', 'h4'));
+        document.getElementById('alignLeft').addEventListener('click', () => execCmd('justifyLeft'));
+        document.getElementById('alignCenter').addEventListener('click', () => execCmd('justifyCenter'));
+        document.getElementById('alignRight').addEventListener('click', () => execCmd('justifyRight'));
+        document.getElementById('linkBtn').addEventListener('click', () => execCmd('createLink'));
+        document.getElementById('unlinkBtn').addEventListener('click', () => execCmd('unlink'));
+
+        // ---------- IMAGE BUTTONS ----------
+        function triggerImageUpload(withCaption) {
+            pendingCaption = withCaption;
+            document.getElementById('imageUploadInput').click();
+        }
+
+        document.getElementById('imageOnlyBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            triggerImageUpload(false);
+        });
+        document.getElementById('imageCaptionBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            triggerImageUpload(true);
+        });
+
+        // ---------- IMAGE UPLOAD HANDLER ----------
+        document.getElementById('imageUploadInput').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Image too large. Max 5MB.');
+                this.value = '';
+                return;
+            }
+            showNotice('⏳ Uploading & compressing image...', 'info');
+            try {
+                const url = await uploadCompressedImage(file);
+                if (url) {
+                    let html = '';
+                    if (pendingCaption) {
+                        html = `
+                            <figure style="margin:16px 0; text-align:center;">
+                                <img src="${url}" alt="Image" style="max-width:100%; border-radius:12px;" loading="lazy">
+                                <figcaption style="font-size:0.9rem; color:#64748b; margin-top:8px; font-style:italic;">Add caption...</figcaption>
+                            </figure>
+                        `;
+                        pendingCaption = false;
+                    } else {
+                        html = `<img src="${url}" alt="Image" style="max-width:100%; border-radius:12px; margin:16px 0;" loading="lazy">`;
+                    }
+                    document.execCommand('insertHTML', false, html);
+                    showNotice('✅ Image inserted (compressed)!', 'success');
+                    setTimeout(() => hideNotice(), 3000);
+                }
+            } catch(err) {
+                showNotice('❌ Upload failed: ' + err.message, 'error');
+            }
+            this.value = '';
+        });
+
+        // ---------- FORMAT MARKDOWN ----------
+        function convertMarkdownToHtml(text) {
+            let html = text;
+            html = html.replace(/^#### (.*)$/gm, '<h4>$1</h4>');
+            html = html.replace(/^### (.*)$/gm, '<h3>$1</h3>');
+            html = html.replace(/^## (.*)$/gm, '<h2>$1</h2>');
+            html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+            html = html.replace(/\*(.*?)\*/g, '<i>$1</i>');
+            html = html.replace(/~~(.*?)~~/g, '<s>$1</s>');
+            html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2">$1</a>');
+            // Lists
+            const lines = html.split('\n');
+            let inList = false;
+            let result = [];
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const trimmed = line.trim();
+                const isBullet = /^[-*]\s+(.*)/.test(trimmed);
+                const isNumbered = /^\d+\.\s+(.*)/.test(trimmed);
+                const isList = isBullet || isNumbered;
+                if (isList) {
+                    if (!inList) {
+                        inList = true;
+                        if (isBullet) result.push('<ul>');
+                        else result.push('<ol>');
+                    }
+                    let contentText = '';
+                    if (isBullet) contentText = trimmed.replace(/^[-*]\s+/, '');
+                    else contentText = trimmed.replace(/^\d+\.\s+/, '');
+                    result.push(`<li>${contentText}</li>`);
+                } else {
+                    if (inList) {
+                        inList = false;
+                        if (result.length > 0 && !result[result.length-1].match(/^<ul>|^<ol>/)) {
+                            result.push('</ul>');
+                        }
+                    }
+                    if (trimmed !== '') {
+                        if (!/^<[h|u|o|a|p|b|i|s|d|f]/.test(trimmed)) {
+                            result.push(`<p>${trimmed}</p>`);
+                        } else {
+                            result.push(trimmed);
+                        }
+                    } else {
+                        result.push('');
+                    }
+                }
+            }
+            if (inList) result.push('</ul>');
+            html = result.join('\n');
+            html = html.replace(/<p><ul>/g, '<ul>');
+            html = html.replace(/<\/ul><\/p>/g, '</ul>');
+            html = html.replace(/<p><ol>/g, '<ol>');
+            html = html.replace(/<\/ol><\/p>/g, '</ol>');
+            html = html.replace(/<p><li>/g, '<li>');
+            html = html.replace(/<\/li><\/p>/g, '</li>');
+            return html;
+        }
+
+        document.getElementById('formatBtn').addEventListener('click', function() {
+            const raw = content.innerText || content.textContent || '';
+            if (!raw.trim()) {
+                showNotice('⚠️ Nothing to format. Paste some content first.', 'info');
+                return;
+            }
+            const formatted = convertMarkdownToHtml(raw);
+            content.innerHTML = formatted || '<p>No content to display.</p>';
+            showNotice('✅ Content formatted!', 'success');
+            setTimeout(() => hideNotice(), 3000);
+        });
+
+        // ---------- NOTICE ----------
+        function showNotice(msg, type = 'info') {
+            notice.className = 'wp-notice ' + type;
+            notice.innerHTML = msg;
+            notice.style.display = 'block';
+        }
+        function hideNotice() {
+            notice.style.display = 'none';
+        }
+
+        // ---------- DATE ----------
+        function getTodayDate() {
+            return new Date().toISOString().split('T')[0];
+        }
+        date.value = getTodayDate();
+
+        // ---------- RESET ----------
+        function resetForm() {
+            title.value = '';
+            content.innerHTML = '<p>Start writing your article...</p>';
+            category.value = '';
+            tags.value = '';
+            excerpt.value = '';
+            date.value = getTodayDate();
+            featuredInput.value = '';
+            featuredPreviewContainer.style.display = 'none';
+            featuredPreview.src = '#';
+            featuredUrl.value = '';
+            currentFeaturedFile = null;
+            editingId = null;
+            pendingCaption = false;
+            publishBtn.style.display = 'block';
+            updateBtn.style.display = 'none';
+            cancelBtn.style.display = 'none';
+            statusBadge.className = 'status-badge draft';
+            statusBadge.textContent = 'Draft';
+            publishMsg.innerHTML = '';
+            showNotice('🆕 New article ready.', 'info');
+            setTimeout(hideNotice, 4000);
+        }
+
+        // ---------- EDIT ----------
+        window.editArticle = async function(id) {
+            try {
+                const articles = await getArticles();
+                const article = articles.find(a => a.id === id);
+                if (!article) return alert('Article not found.');
+                editingId = id;
+                title.value = article.title || '';
+                content.innerHTML = article.content || article.summary || '<p>Start writing...</p>';
+                category.value = article.category || '';
+                tags.value = (article.tags || []).join(', ');
+                excerpt.value = article.summary || '';
+                date.value = article.date || getTodayDate();
+                if (article.image) {
+                    featuredUrl.value = article.image;
+                    featuredPreview.src = article.image;
+                    featuredPreviewContainer.style.display = 'block';
+                    currentFeaturedFile = null;
+                } else {
+                    featuredPreviewContainer.style.display = 'none';
+                    featuredUrl.value = '';
+                }
+                publishBtn.style.display = 'none';
+                updateBtn.style.display = 'block';
+                cancelBtn.style.display = 'block';
+                statusBadge.className = 'status-badge published';
+                statusBadge.textContent = 'Published';
+                publishMsg.innerHTML = '';
+                showNotice(`✏️ Editing: "${article.title}"`, 'info');
+                setTimeout(hideNotice, 3000);
+                document.querySelector('.wp-editor-wrapper').scrollIntoView({ behavior: 'smooth' });
+            } catch(err) {
+                alert('Error loading article: ' + err.message);
+            }
+        };
+
+        cancelBtn.addEventListener('click', resetForm);
+
+        // ---------- PUBLISH ----------
+        async function saveArticle(isUpdate = false) {
+            const titleVal = title.value.trim();
+            const categoryVal = category.value.trim();
+            const excerptVal = excerpt.value.trim() || 'No summary provided.';
+            const contentVal = content.innerHTML.trim() || excerptVal;
+            const tagsVal = tags.value.split(',').map(t => t.trim()).filter(Boolean);
+            const dateVal = date.value || getTodayDate();
+            let imageUrl = featuredUrl.value;
+
+            if (!titleVal || !categoryVal) {
+                showNotice('❌ Please fill in Title and Category.', 'error');
+                return;
+            }
+
+            publishBtn.disabled = true;
+            updateBtn.disabled = true;
+            publishMsg.innerHTML = '⏳ Saving...';
+
+            try {
+                if (currentFeaturedFile) {
+                    const url = await uploadCompressedImage(currentFeaturedFile);
+                    if (url) imageUrl = url;
+                }
+                if (!imageUrl) imageUrl = 'https://picsum.photos/seed/sports/600/400';
+
+                let result;
+                if (isUpdate) {
+                    result = await updateArticle(editingId, {
+                        title: titleVal,
+                        content: contentVal,
+                        summary: excerptVal,
+                        category: categoryVal,
+                        author: 'Admin',
+                        image: imageUrl,
+                        date: dateVal,
+                        tags: tagsVal
+                    });
+                } else {
+                    result = await addArticle({
+                        title: titleVal,
+                        content: contentVal,
+                        summary: excerptVal,
+                        category: categoryVal,
+                        author: 'Admin',
+                        image: imageUrl,
+                        date: dateVal,
+                        tags: tagsVal
+                    });
+                }
+
+                if (result.success) {
+                    showNotice(`✅ Article ${isUpdate ? 'updated' : 'published'} successfully!`, 'success');
+                    statusBadge.className = 'status-badge published';
+                    statusBadge.textContent = 'Published';
+                    if (!isUpdate) resetForm();
+                    await refreshArticleList();
+                    if (window.loadAndRender) window.loadAndRender();
+                    setTimeout(hideNotice, 4000);
+                } else {
+                    showNotice('❌ Failed: ' + result.error, 'error');
+                }
+            } catch(err) {
+                showNotice('❌ Error: ' + err.message, 'error');
+            }
+
+            publishBtn.disabled = false;
+            updateBtn.disabled = false;
+            publishMsg.innerHTML = '';
+        }
+
+        publishBtn.addEventListener('click', () => saveArticle(false));
+        updateBtn.addEventListener('click', () => saveArticle(true));
+
+        // ---------- ARTICLE LIST ----------
+        async function refreshArticleList() {
+            const list = document.getElementById('articleList');
+            try {
+                const articles = await getArticles();
+                if (articles.length === 0) {
+                    list.innerHTML = '<span style="color:#94a3b8;">No articles yet.</span>';
+                } else {
+                    list.innerHTML = articles.map(a => `
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #f1f5f9;">
+                            <span style="cursor:pointer; color:#0b1a2e;" onclick="editArticle('${a.id}')">${a.title}</span>
+                            <button onclick="deleteArticle('${a.id}')" style="background:none; border:none; color:#ef4444; cursor:pointer; font-size:0.8rem;">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `).join('');
+                }
+            } catch(e) {
+                list.innerHTML = '<span style="color:#ef4444;">❌ Error loading articles</span>';
+            }
+        }
+
+        window.deleteArticle = async function(id) {
+            if (!confirm('Delete this article permanently?')) return;
+            const result = await deleteArticleById(id);
+            if (result.success) {
+                alert('🗑️ Deleted!');
+                if (editingId === id) resetForm();
+                await refreshArticleList();
+                if (window.loadAndRender) window.loadAndRender();
+            } else {
+                alert('Delete failed: ' + result.error);
+            }
+        };
+
+        // ---------- FEATURED IMAGE ----------
+        featuredInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Image too large. Max 5MB.');
+                this.value = '';
+                return;
+            }
+            currentFeaturedFile = file;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                featuredPreview.src = ev.target.result;
+                featuredPreviewContainer.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+            featuredUrl.value = '';
+        });
+
+        removeFeaturedBtn.addEventListener('click', function() {
+            featuredInput.value = '';
+            featuredPreviewContainer.style.display = 'none';
+            featuredPreview.src = '#';
+            featuredUrl.value = '';
+            currentFeaturedFile = null;
+        });
+
+        // ---------- LOGOUT ----------
+        document.getElementById('dashboardLogout').addEventListener('click', function(e) {
+            e.preventDefault();
+            adminLogout();
+        });
+
+        // ---------- INIT ----------
+        async function init() {
+            await refreshArticleList();
+            resetForm();
+        }
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

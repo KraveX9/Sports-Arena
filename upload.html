@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sports Arena - Instant Image Upload</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; background: #f4f6f9; }
+        .upload-zone { border: 3px dashed #e74c3c; padding: 40px; text-align: center; background: white; border-radius: 16px; cursor: pointer; transition: 0.3s; }
+        .upload-zone:hover, .upload-zone.dragover { background: #fff5f5; border-color: #c0392b; }
+        #previewContainer img { max-width: 100%; max-height: 250px; margin-top: 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        #markdown-editor { width: 100%; height: 350px; padding: 15px; font-family: monospace; border: 1px solid #ddd; border-radius: 8px; margin-top: 20px; background: white; }
+        .status { padding: 10px; margin-top: 10px; border-radius: 6px; font-weight: bold; }
+        .success { background: #d4edda; color: #155724; }
+        .info { background: #cce5ff; color: #004085; }
+        .btn { background: #e74c3c; color: white; border: none; padding: 12px 30px; border-radius: 30px; font-weight: bold; cursor: pointer; margin-top: 15px; }
+        .note { font-size: 14px; color: #666; margin-top: 10px; background: #fff3cd; padding: 10px; border-radius: 6px; }
+    </style>
+</head>
+<body>
+
+    <h1>⚽ Sports Arena - Instant Image Uploader</h1>
+    <p><em>100% Pure JavaScript - No Server Required</em></p>
+
+    <!-- Drag & Drop Zone -->
+    <div class="upload-zone" id="dropZone">
+        <p><strong>📸 Drag & Drop your image here</strong></p>
+        <p>or click to browse files</p>
+        <div id="previewContainer"></div>
+    </div>
+    
+    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+    <button class="btn" onclick="document.getElementById('fileInput').click()">Choose Image</button>
+    
+    <div id="status" class="status info">⏳ Waiting for image...</div>
+
+    <!-- Your Markdown Editor -->
+    <h3>✍️ Article Editor (Markdown)</h3>
+    <textarea id="markdown-editor" placeholder="Start writing your article...">![Lewis Hall]()
+
+Manchester United close in on transfer...</textarea>
+
+    <div class="note">
+        ⚡ <strong>Note:</strong> The image is embedded as Base64 text. If you copy this text to WordPress or a CMS, the image comes with it automatically!
+    </div>
+
+    <script>
+        // --- PURE JAVASCRIPT - NO BACKEND NEEDED ---
+
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const statusDiv = document.getElementById('status');
+        const editor = document.getElementById('markdown-editor');
+
+        // The main function that handles the image
+        function handleImage(file) {
+            // 1. Validate
+            if (!file || !file.type.startsWith('image/')) {
+                statusDiv.className = 'status';
+                statusDiv.style.background = '#f8d7da';
+                statusDiv.style.color = '#721c24';
+                statusDiv.textContent = '❌ Please upload a valid image file.';
+                return;
+            }
+
+            // 2. Show status
+            statusDiv.className = 'status';
+            statusDiv.style.background = '#cce5ff';
+            statusDiv.style.color = '#004085';
+            statusDiv.textContent = '⏳ Processing image...';
+
+            const reader = new FileReader();
+
+            // 3. When the file is read
+            reader.onload = function(e) {
+                // --- INSTANT PREVIEW ---
+                previewContainer.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+
+                // --- INSTANT MARKDOWN INJECTION (Just like WordPress!) ---
+                const base64Image = e.target.result; // This is the full image data
+                const markdownLink = `![${file.name}](${base64Image})`;
+
+                // Insert the image at the current cursor position in the textarea
+                const start = editor.selectionStart;
+                const end = editor.selectionEnd;
+                const text = editor.value;
+                editor.value = text.substring(0, start) + markdownLink + text.substring(end);
+                
+                // Move cursor to after the inserted text
+                editor.selectionStart = editor.selectionEnd = start + markdownLink.length;
+                editor.focus();
+
+                // --- SUCCESS STATUS ---
+                statusDiv.className = 'status';
+                statusDiv.style.background = '#d4edda';
+                statusDiv.style.color = '#155724';
+                statusDiv.textContent = `✅ Image "${file.name}" inserted instantly! (Size: ${(file.size / 1024).toFixed(1)} KB)`;
+            };
+
+            // 4. Read the file as a data URL (Base64)
+            reader.readAsDataURL(file);
+        }
+
+        // --- EVENT LISTENERS ---
+
+        // Click to browse
+        dropZone.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleImage(e.target.files[0]);
+            }
+            fileInput.value = ''; // Reset so same file can be uploaded again
+        });
+
+        // Drag and Drop
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                handleImage(e.dataTransfer.files[0]);
+            }
+        });
+    </script>
+</body>
+      </html>
